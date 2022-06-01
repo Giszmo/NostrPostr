@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">NostrPostr</string>
+    <string name="title_home">Home</string>
+    <string name="title_feed">Feed</string>
+    <string name="title_notifications">Notifications</string>
+    <string name="title_messages">Messages</string>
+    <string name="title_search">Search</string>
+    <string name="title_post">Post</string>
+</resources>
