@@ -1,6 +1,7 @@
 package nostr.postr
 
 import android.os.Bundle
+import android.util.Log
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.findNavController
@@ -9,12 +10,14 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import nostr.postr.databinding.ActivityMainBinding
 
-class MainActivity : AppCompatActivity() {
-
+class MainActivity : AppCompatActivity(), Client.Listener {
     private lateinit var binding: ActivityMainBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        Client.register(this)
+        Client.connect()
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -31,5 +34,21 @@ class MainActivity : AppCompatActivity() {
         )
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
+    }
+
+    override fun onNewEvent(event: Event) {
+        Log.d("NEW_MSG", "${event.pubkey} wrote kind ${event.kind}: ${event.content}")
+    }
+
+    override fun onEvent(event: Event, relay: Relay) {
+        // Log.d("MSG", "$relay sent $msg")
+    }
+
+    override fun onError(error: Error) {
+        Log.e("ERROR", error.toString())
+    }
+
+    override fun onRelayStateChange(type: Int, relay: Relay) {
+        Log.d("RELAY", "Relay ${relay.url} ${if (type == 0) "connected" else "disconnected"}")
     }
 }
