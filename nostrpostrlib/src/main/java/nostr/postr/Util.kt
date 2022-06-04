@@ -18,7 +18,7 @@ To obtain the event.id, we sha256 the serialized event. The serialization is don
  */
 fun Event.checkId() = Schnorr.sha256("""[0,$pubkey,$createdAt,$kind,${Gson().toJson(tags)},$content]""".toByteArray()).contentEquals(id)
 
-fun Event.checkSignature() = checkId() && Schnorr.schnorrVerify(id, pubkey, sig)
+fun Event.checkSignature() = checkId() && Schnorr.verify(id, pubkey, sig)
 
 object Util {
     fun checkSignature(event: Event) = event.checkSignature()
