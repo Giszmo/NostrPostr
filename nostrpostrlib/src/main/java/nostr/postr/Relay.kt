@@ -37,6 +37,8 @@ class Relay(
                 val channel = msg[1].asString
                 if (type == "EVENT") {
                     val event = gson.fromJson(msg[2], Event::class.java)
+                    if (!event.checkSignature())
+                        return
                     listeners.forEach { it.onEvent(this@Relay, event) }
                 } else {
                     listeners.forEach { it.onError(this@Relay, Error("Unknown type $type on channel $channel."))}

@@ -1,10 +1,8 @@
 package nostr.postr
 
-import java.security.PrivateKey
-import java.security.PublicKey
-
-class Persona(val privateKey: PrivateKey?, val publicKey: PublicKey?) {
+class Persona(
+    val privateKey: ByteArray?,
+    val publicKey: ByteArray?) {
     var petName: String? = null
-    val follows: Array<PublicKey>? = null
-
+    val follows: Array<ByteArray>? = null
 }

@@ -1,13 +1,13 @@
 package nostr.postr
 
 data class Event(
-    val id: String,
-    val pubkey: String,
+    val id: ByteArray,
+    val pubkey: ByteArray,
     val createdAt: Long,
     val kind: Int,
     val tags: Array<Any>,
     val content: String,
-    val sig: String
+    val sig: ByteArray
 )
 // TODO: split by kinds.
 /*
