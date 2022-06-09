@@ -2,12 +2,25 @@ apply plugin: 'java'
 apply plugin: 'kotlin'
 
 dependencies {
-    testImplementation 'junit:junit:4.13.2'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'com.squareup.retrofit2:retrofit:2.8.1'
     implementation 'com.squareup.retrofit2:converter-gson:2.8.1'
-    implementation 'com.squareup.okhttp3:okhttp:3.14.7'
+    implementation 'com.squareup.okhttp3:okhttp:4.9.3'
     implementation project(':bip-schnorr-kotlin')
+    implementation 'com.madgag.spongycastle:core:1.51.0.0'
+    implementation 'com.madgag.spongycastle:prov:1.51.0.0'
+
+    testImplementation "org.junit.jupiter:junit-jupiter:5.8.2"
+    testImplementation "org.junit.jupiter:junit-jupiter-params:5.8.2"
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:5.8.2"
+    testRuntimeOnly "org.junit.vintage:junit-vintage-engine:5.8.2"
+}
+
+tasks.test {
+    useJUnitPlatform()
+    testLogging {
+        events("passed", "skipped", "failed")
+    }
 }
 
 java {

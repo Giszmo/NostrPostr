@@ -22,8 +22,8 @@ object Client: RelayPool.Listener {
         listeners.forEach { it.onNewEvent(event) }
     }
 
-    override fun onError(error: Error) {
-        listeners.forEach { it.onError(error) }
+    override fun onError(error: Error, relay: Relay) {
+        listeners.forEach { it.onError(error, relay) }
     }
 
     override fun onRelayStateChange(type: Int, relay: Relay) {
@@ -53,7 +53,7 @@ object Client: RelayPool.Listener {
          * A new or repeat message was received
          */
 
-        fun onError(error: Error)
+        fun onError(error: Error, relay: Relay)
 
         /**
          * Connected to or disconnected from a relay

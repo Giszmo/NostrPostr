@@ -17,9 +17,7 @@ class Relay(
         listeners.add(listener)
     }
 
-    fun unregister(listener: Listener): Boolean {
-        return listeners.remove(listener)
-    }
+    fun unregister(listener: Listener) = listeners.remove(listener)
 
     fun connect() {
         val request = Request.Builder().url(url).build()
@@ -35,13 +33,15 @@ class Relay(
                 val msg = gson.fromJson(text, JsonElement::class.java).asJsonArray
                 val type = msg[0].asString
                 val channel = msg[1].asString
+                val eventJson = msg[2].asString
                 if (type == "EVENT") {
-                    val event = gson.fromJson(msg[2], Event::class.java)
-                    if (!event.checkSignature())
-                        return
+                    val event = Event.fromJson(eventJson)
                     listeners.forEach { it.onEvent(this@Relay, event) }
                 } else {
-                    listeners.forEach { it.onError(this@Relay, Error("Unknown type $type on channel $channel."))}
+                    listeners.forEach {
+                        it.onError(this@Relay,
+                            Error("Unknown type $type on channel $channel."))
+                    }
                 }
             }
 
@@ -50,11 +50,16 @@ class Relay(
             }
 
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
-                listeners.forEach { it.onError(this@Relay, Error(t)) }
+                listeners.forEach {
+                    it.onError(this@Relay, Error("WebSocket Failure", t))
+                }
             }
         }
         httpClient.newWebSocket(request, listener)
-        // httpClient.dispatcher().executorService().shutdown()
+    }
+
+    fun disconnect() {
+         httpClient.dispatcher.executorService.shutdown()
     }
 
     interface Listener {

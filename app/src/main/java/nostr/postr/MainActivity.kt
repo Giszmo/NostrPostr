@@ -44,8 +44,8 @@ class MainActivity : AppCompatActivity(), Client.Listener {
         // Log.d("MSG", "$relay sent $msg")
     }
 
-    override fun onError(error: Error) {
-        Log.e("ERROR", error.toString())
+    override fun onError(error: Error, relay: Relay) {
+        Log.e("ERROR", "Relay ${relay.url}: ${error.message}")
     }
 
     override fun onRelayStateChange(type: Int, relay: Relay) {

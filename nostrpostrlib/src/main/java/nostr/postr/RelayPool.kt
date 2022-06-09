@@ -48,7 +48,7 @@ object RelayPool: Relay.Listener {
 
         fun onEvent(event: Event, relay: Relay)
 
-        fun onError(error: Error)
+        fun onError(error: Error, relay: Relay)
 
         /**
          * Connected to or disconnected from a relay
@@ -64,7 +64,7 @@ object RelayPool: Relay.Listener {
     }
 
     override fun onError(relay: Relay, error: Error) {
-        listeners.forEach { it.onError(Error("$error on $relay")) }
+        listeners.forEach { it.onError(error, relay) }
     }
 
     override fun onRelayStateChange(relay: Relay, type: Int) {
