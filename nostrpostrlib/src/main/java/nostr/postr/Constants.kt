@@ -2,17 +2,17 @@ package nostr.postr
 
 object Constants {
     val defaultRelays = arrayOf(
-        Relay("wss://rsslay.fiatjaf.com", canRead = true, canWrite = false),
-        Relay("wss://nostr-pub.wellorder.net", canRead = true, canWrite = true),
-        Relay("wss://expensive-relay.fiatjaf.com", canRead = true, canWrite = false)
+        Relay("wss://rsslay.fiatjaf.com", read = true, write = false),
+        Relay("wss://nostr-pub.wellorder.net", read = true, write = true),
+        Relay("wss://expensive-relay.fiatjaf.com", read = true, write = false)
     )
     val optionalRelays = arrayOf(
-        Relay("wss://nostr.rocks", canRead = true, canWrite = true),
-        Relay("wss://relayer.fiatjaf.com", canRead = true, canWrite = true),
-        Relay("wss://nostr.onsats.org", canRead = true, canWrite = true),
-        Relay("wss://nostr-relay.untethr.me	", canRead = true, canWrite = true),
-        Relay("wss://nostr-relay.wlvs.space", canRead = true, canWrite = true),
-        Relay("wss://nostr.bitcoiner.social", canRead = true, canWrite = true),
-        Relay("wss://nostr-relay.freeberty.net", canRead = true, canWrite = true)
+        Relay("wss://nostr.rocks", read = true, write = true),
+        Relay("wss://relayer.fiatjaf.com", read = true, write = true),
+        Relay("wss://nostr.onsats.org", read = true, write = true),
+        Relay("wss://nostr-relay.untethr.me	", read = true, write = true),
+        Relay("wss://nostr-relay.wlvs.space", read = true, write = true),
+        Relay("wss://nostr.bitcoiner.social", read = true, write = true),
+        Relay("wss://nostr-relay.freeberty.net", read = true, write = true)
     )
 }

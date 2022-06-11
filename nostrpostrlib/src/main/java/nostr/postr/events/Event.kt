@@ -9,7 +9,7 @@ import java.security.MessageDigest
 open class Event(
     val id: ByteArray,
     val pubkey: ByteArray,
-    val createdAt: Long,
+    val created_at: Long,
     val kind: Int,
     val tags: List<List<String>>,
     val content: String,
@@ -21,17 +21,16 @@ open class Event(
         val rawEvent = listOf(
             0,
             String(Hex.encode(pubkey)),
-            createdAt,
+            created_at,
             kind,
             tags,
-            content)
+            content
+        )
         val rawEventJson = gson.toJson(rawEvent)
-        val sha256 = MessageDigest.getInstance("SHA-256")
-        val hash = sha256.digest(rawEventJson.toByteArray())
-        return hash
+        return sha256.digest(rawEventJson.toByteArray())
     }
 
-    private fun checkSignature() {
+    fun checkSignature() {
         if (!id.contentEquals(generateId())) {
             throw Error(
                 """|Unexpected ID.
@@ -53,7 +52,7 @@ open class Event(
             return Event(
                 id = Hex.decode(jsonObject.get("id").asString),
                 pubkey = Hex.decode(jsonObject.get("pubkey").asString),
-                createdAt = jsonObject.get("created_at").asLong,
+                created_at = jsonObject.get("created_at").asLong,
                 kind = jsonObject.get("kind").asInt,
                 tags = jsonObject.get("tags").asJsonArray.map {
                     it.asJsonArray.map { s -> s.asString }
@@ -73,7 +72,7 @@ open class Event(
             return JsonObject().apply {
                 addProperty("id", String(Hex.encode(src.id)))
                 addProperty("pubkey", String(Hex.encode(src.pubkey)))
-                addProperty("created_at", src.createdAt)
+                addProperty("created_at", src.created_at)
                 addProperty("kind", src.kind)
                 add("tags", JsonArray().also { jsonTags ->
                     src.tags.forEach { tag ->
@@ -86,31 +85,38 @@ open class Event(
                 })
                 addProperty("content", src.content)
                 addProperty("sig", String(Hex.encode(src.sig)))
-
             }
         }
+    }
 
+    class ByteArraySerializer : JsonSerializer<ByteArray> {
+        override fun serialize(
+            src: ByteArray,
+            typeOfSrc: Type?,
+            context: JsonSerializationContext?
+        ) = JsonPrimitive(String(Hex.encode(src)))
     }
 
     companion object {
-        private var gson = GsonBuilder()
+        val sha256: MessageDigest = MessageDigest.getInstance("SHA-256")
+        internal var gson = GsonBuilder()
             .disableHtmlEscaping()
             .registerTypeAdapter(Event::class.java, EventSerializer())
             .registerTypeAdapter(Event::class.java, EventDeserializer())
+            .registerTypeAdapter(ByteArray::class.java, ByteArraySerializer())
             .create()
 
-        fun fromJson(json: String): Event {
-            val event = gson.fromJson(json, Event::class.java)
-            event.checkSignature()
-            return event
-        }
+        fun fromJson(json: String): Event? = gson.fromJson(json, Event::class.java)
+            .run {
+                when (kind) {
+                    MetadataEvent.kind -> MetadataEvent(id, pubkey, created_at, tags, content, sig)
+                    TextNoteEvent.kind -> TextNoteEvent(id, pubkey, created_at, tags, content, sig)
+                    RecommendRelayEvent.kind -> RecommendRelayEvent(id, pubkey, created_at, tags, content, sig)
+                    ContactListEvent.kind -> ContactListEvent(id, pubkey, created_at, tags, content, sig)
+                    EncryptedDmEvent.kind -> EncryptedDmEvent(id, pubkey, created_at, tags, content, sig)
+                    DeletionEvent.kind -> DeletionEvent(id, pubkey, created_at, tags, content, sig)
+                    else -> null
+                }
+            }
     }
 }
-
-// data class MetaDataEvent(): Event()
-// TODO: split by kinds.
-/*
-    0: set_metadata: the content is set to a stringified JSON object {name: <string>, about: <string>, picture: <url, string>} describing the user who created the event. A relay may delete past set_metadata events once it gets a new one for the same pubkey.
-    1: text_note: the content is set to the text content of a note (anything the user wants to say).
-    2: recommend_server: the content is set to the URL (e.g., https://somerelay.com) of a relay the event creator wants to recommend to its followers.
-*/

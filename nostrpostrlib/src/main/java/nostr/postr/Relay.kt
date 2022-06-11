@@ -6,11 +6,11 @@ import com.google.gson.JsonElement
 
 class Relay(
     val url: String,
-    var canRead: Boolean,
-    var canWrite: Boolean
+    var read: Boolean,
+    var write: Boolean
 ) {
-    private var httpClient = OkHttpClient()
-    private var gson = GsonBuilder().create()
+    private val httpClient = OkHttpClient()
+    private val gson = GsonBuilder().create()
     private val listeners = HashSet<Listener>()
 
     fun register(listener: Listener) {
@@ -36,7 +36,7 @@ class Relay(
                 val eventJson = msg[2].asString
                 if (type == "EVENT") {
                     val event = Event.fromJson(eventJson)
-                    listeners.forEach { it.onEvent(this@Relay, event) }
+                    listeners.forEach { it.onEvent(this@Relay, event!!) }
                 } else {
                     listeners.forEach {
                         it.onError(this@Relay,
