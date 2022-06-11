@@ -4,7 +4,6 @@ import nostr.postr.*
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import org.spongycastle.util.encoders.Hex
 
@@ -71,13 +70,13 @@ class EventTest {
             }
         }.toMap()
 
-        @JvmStatic fun provideAnyKindEventJson() = eventsJson["all"]!!.map { Arguments.of(it) }.stream()
-        @JvmStatic fun provideAnyKindEvent() = events["all"]!!.map { Arguments.of(it) }.stream()
-        @JvmStatic fun provideMetadataEvent() = events[MetadataEvent.kind.toString()]!!.map { Arguments.of(it) }.stream()
-        @JvmStatic fun provideTextNoteEvent() = events[TextNoteEvent.kind.toString()]!!.map { Arguments.of(it) }.stream()
-        @JvmStatic fun provideRecommendRelayEvent() = events[RecommendRelayEvent.kind.toString()]!!.map { Arguments.of(it) }.stream()
-        @JvmStatic fun provideContactListEvent() = events[ContactListEvent.kind.toString()]!!.map { Arguments.of(it) }.stream()
-        @JvmStatic fun provideEncryptedDmEvent() = events[EncryptedDmEvent.kind.toString()]!!.map { Arguments.of(it) }.stream()
-        @JvmStatic fun provideDeletionEvent() = events[DeletionEvent.kind.toString()]!!.map { Arguments.of(it) }.stream()
+        @JvmStatic fun provideAnyKindEventJson() = eventsJson["all"]!!.stream()
+        @JvmStatic fun provideAnyKindEvent() = events["all"]!!.stream()
+        @JvmStatic fun provideMetadataEvent() = events[MetadataEvent.kind.toString()]!!.stream()
+        @JvmStatic fun provideTextNoteEvent() = events[TextNoteEvent.kind.toString()]!!.stream()
+        @JvmStatic fun provideRecommendRelayEvent() = events[RecommendRelayEvent.kind.toString()]!!.stream()
+        @JvmStatic fun provideContactListEvent() = events[ContactListEvent.kind.toString()]!!.stream()
+        @JvmStatic fun provideEncryptedDmEvent() = events[EncryptedDmEvent.kind.toString()]!!.stream()
+        @JvmStatic fun provideDeletionEvent() = events[DeletionEvent.kind.toString()]!!.stream()
     }
 }
