@@ -41,6 +41,7 @@ class MainActivity : AppCompatActivity(), Client.Listener {
     }
 
     override fun onEvent(event: Event, relay: Relay) {
+        Log.d("EVENT", event.toJson())
         // Log.d("MSG", "$relay sent $msg")
     }
 

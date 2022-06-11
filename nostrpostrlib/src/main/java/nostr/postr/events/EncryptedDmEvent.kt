@@ -9,12 +9,12 @@ class EncryptedDmEvent(
     sig: ByteArray
 ): Event(id, pubkey, createdAt, kind, tags, content, sig) {
     @Transient val recipient: String
-    @Transient val replyToEvent: String?
+    @Transient val replyTo: String?
 
     init {
         check(tags.size in 1..2)
         recipient = tags.first { it.firstOrNull() == "p" }.run { this[1] }
-        replyToEvent = tags.firstOrNull { it.firstOrNull() == "e" }.run { this?.getOrNull(1) }
+        replyTo = tags.firstOrNull { it.firstOrNull() == "e" }.run { this?.getOrNull(1) }
     }
 
     companion object {

@@ -99,7 +99,7 @@ open class Event(
 
     companion object {
         val sha256: MessageDigest = MessageDigest.getInstance("SHA-256")
-        internal var gson = GsonBuilder()
+        internal val gson = GsonBuilder()
             .disableHtmlEscaping()
             .registerTypeAdapter(Event::class.java, EventSerializer())
             .registerTypeAdapter(Event::class.java, EventDeserializer())
