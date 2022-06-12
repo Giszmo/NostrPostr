@@ -1,15 +1,17 @@
-package nostr.postr
+package nostr.postr.events
 
 import com.google.gson.*
+import com.google.gson.annotations.SerializedName
 import de.leowandersleb.lib_bip_schnorr_kotlin.Schnorr
+import nostr.postr.*
 import org.spongycastle.util.encoders.Hex
 import java.lang.reflect.Type
 import java.security.MessageDigest
 
 open class Event(
     val id: ByteArray,
-    val pubkey: ByteArray,
-    val created_at: Long,
+    @SerializedName("pubkey") val pubKey: ByteArray,
+    @SerializedName("created_at") val createdAt: Long,
     val kind: Int,
     val tags: List<List<String>>,
     val content: String,
@@ -20,8 +22,8 @@ open class Event(
     internal fun generateId(): ByteArray {
         val rawEvent = listOf(
             0,
-            String(Hex.encode(pubkey)),
-            created_at,
+            pubKey.toHex(),
+            createdAt,
             kind,
             tags,
             content
@@ -35,11 +37,11 @@ open class Event(
             throw Error(
                 """|Unexpected ID.
                    |  Event: ${toJson()}
-                   |  Actual ID: ${String(Hex.encode(id))}
-                   |  Generated: ${String(Hex.encode(generateId()))}""".trimIndent()
+                   |  Actual ID: ${id.toHex()}
+                   |  Generated: ${generateId().toHex()}""".trimIndent()
             )
         }
-        Schnorr.verify(id, pubkey, sig)
+        Schnorr.verify(id, pubKey, sig)
     }
 
     class EventDeserializer : JsonDeserializer<Event> {
@@ -51,8 +53,8 @@ open class Event(
             val jsonObject = json.asJsonObject
             return Event(
                 id = Hex.decode(jsonObject.get("id").asString),
-                pubkey = Hex.decode(jsonObject.get("pubkey").asString),
-                created_at = jsonObject.get("created_at").asLong,
+                pubKey = Hex.decode(jsonObject.get("pubkey").asString),
+                createdAt = jsonObject.get("created_at").asLong,
                 kind = jsonObject.get("kind").asInt,
                 tags = jsonObject.get("tags").asJsonArray.map {
                     it.asJsonArray.map { s -> s.asString }
@@ -70,9 +72,9 @@ open class Event(
             context: JsonSerializationContext?
         ): JsonElement {
             return JsonObject().apply {
-                addProperty("id", String(Hex.encode(src.id)))
-                addProperty("pubkey", String(Hex.encode(src.pubkey)))
-                addProperty("created_at", src.created_at)
+                addProperty("id", src.id.toHex())
+                addProperty("pubkey", src.pubKey.toHex())
+                addProperty("created_at", src.createdAt)
                 addProperty("kind", src.kind)
                 add("tags", JsonArray().also { jsonTags ->
                     src.tags.forEach { tag ->
@@ -84,7 +86,7 @@ open class Event(
                     }
                 })
                 addProperty("content", src.content)
-                addProperty("sig", String(Hex.encode(src.sig)))
+                addProperty("sig", src.sig.toHex())
             }
         }
     }
@@ -94,29 +96,35 @@ open class Event(
             src: ByteArray,
             typeOfSrc: Type?,
             context: JsonSerializationContext?
-        ) = JsonPrimitive(String(Hex.encode(src)))
+        ) = JsonPrimitive(src.toHex())
     }
 
     companion object {
         val sha256: MessageDigest = MessageDigest.getInstance("SHA-256")
-        internal val gson = GsonBuilder()
+        val gson: Gson = GsonBuilder()
             .disableHtmlEscaping()
             .registerTypeAdapter(Event::class.java, EventSerializer())
             .registerTypeAdapter(Event::class.java, EventDeserializer())
             .registerTypeAdapter(ByteArray::class.java, ByteArraySerializer())
             .create()
 
-        fun fromJson(json: String): Event? = gson.fromJson(json, Event::class.java)
-            .run {
-                when (kind) {
-                    MetadataEvent.kind -> MetadataEvent(id, pubkey, created_at, tags, content, sig)
-                    TextNoteEvent.kind -> TextNoteEvent(id, pubkey, created_at, tags, content, sig)
-                    RecommendRelayEvent.kind -> RecommendRelayEvent(id, pubkey, created_at, tags, content, sig)
-                    ContactListEvent.kind -> ContactListEvent(id, pubkey, created_at, tags, content, sig)
-                    EncryptedDmEvent.kind -> EncryptedDmEvent(id, pubkey, created_at, tags, content, sig)
-                    DeletionEvent.kind -> DeletionEvent(id, pubkey, created_at, tags, content, sig)
-                    else -> null
-                }
-            }
+        fun fromJson(json: String): Event = gson.fromJson(json, Event::class.java).getRefinedEvent()
+
+        fun fromJson(json: JsonElement): Event = gson.fromJson(json, Event::class.java).getRefinedEvent()
+
+        fun Event.getRefinedEvent(): Event = when (kind) {
+            MetadataEvent.kind -> MetadataEvent(id, pubKey, createdAt, tags, content, sig)
+            TextNoteEvent.kind -> TextNoteEvent(id, pubKey, createdAt, tags, content, sig)
+            RecommendRelayEvent.kind -> RecommendRelayEvent(id, pubKey, createdAt, tags, content, sig)
+            ContactListEvent.kind -> ContactListEvent(id, pubKey, createdAt, tags, content, sig)
+            EncryptedDmEvent.kind -> EncryptedDmEvent(id, pubKey, createdAt, tags, content, sig)
+            DeletionEvent.kind -> DeletionEvent(id, pubKey, createdAt, tags, content, sig)
+            6 -> this // content has full event. Resend/Retweet
+            7 -> this // no content but e and p tags. Boosts
+            17 -> this // nwiki. tag w->subject https://github.com/fiatjaf/nwiki
+            30 -> this // jester https://jesterui.github.io/
+            7357 -> this // just an e tag
+            else -> this
+        }
     }
 }

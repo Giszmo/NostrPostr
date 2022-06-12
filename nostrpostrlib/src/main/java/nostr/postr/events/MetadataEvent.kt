@@ -1,15 +1,16 @@
-package nostr.postr
+package nostr.postr.events
 
 import com.google.gson.Gson
+import nostr.postr.ContactMetaData
 
 class MetadataEvent(
     id: ByteArray,
-    pubkey: ByteArray,
+    pubKey: ByteArray,
     createdAt: Long,
     tags: List<List<String>>,
     content: String,
     sig: ByteArray
-): Event(id, pubkey, createdAt, kind, tags, content, sig) {
+): Event(id, pubKey, createdAt, kind, tags, content, sig) {
     @Transient val contactMetaData: ContactMetaData
 
     init {

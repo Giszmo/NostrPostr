@@ -1,37 +1,38 @@
-package nostr.postr
+package nostr.postr.events
 
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import nostr.postr.Contact
 
 /**
  * Contains follows and used relays
  */
 class ContactListEvent(
     id: ByteArray,
-    pubkey: ByteArray,
+    pubKey: ByteArray,
     createdAt: Long,
     tags: List<List<String>>,
     content: String,
     sig: ByteArray
-): Event(id, pubkey, createdAt, kind, tags, content, sig) {
+): Event(id, pubKey, createdAt, kind, tags, content, sig) {
     @Transient val follows: List<Contact>
-    @Transient val relayUse: Map<String, ReadWrite>
+    @Transient val relayUse: Map<String, ReadWrite>?
 
     init {
         try {
-            follows = tags.map {
-                check(it[0] == "p")
-                check(it.size > 1)
-                check(it.size < 4)
+            follows = tags.filter { it[0] == "p" }.map {
                 Contact(it[1], it.getOrNull(2))
             }
         } catch (e: Exception) {
             throw Error("can't parse tags as follows: $tags", e)
         }
-        try {
-            relayUse =  Gson().fromJson(content, object: TypeToken<Map<String, ReadWrite>>() {}.type)
+        relayUse = try {
+            if (content.isNotEmpty())
+                Gson().fromJson(content, object: TypeToken<Map<String, ReadWrite>>() {}.type)
+            else
+                null
         } catch (e: Exception) {
-            throw Error("can't parse content as relays: $content", e)
+            null
         }
     }
 

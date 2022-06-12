@@ -1,5 +1,7 @@
 package nostr.postr
 
+import nostr.postr.events.Event
+
 /**
  * RelayPool manages the connection to multiple Relays and lets consumers deal with simple events.
  */

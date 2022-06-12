@@ -1,6 +1,5 @@
 package nostr.postr.events
 
-import nostr.postr.*
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.params.ParameterizedTest
@@ -11,8 +10,7 @@ class EventTest {
     @ParameterizedTest @MethodSource("provideAnyKindEventJson")
     fun fromToJson(eventJson: String) {
         check(eventJson.isNotEmpty())
-        val event = Event.fromJson(eventJson)
-        val eventJsonActual = event!!.toJson()
+        val eventJsonActual = Event.fromJson(eventJson).toJson()
         assertEquals(eventJson, eventJsonActual, "Actual events don't survive deserialization and re-serialization")
     }
 
@@ -58,17 +56,33 @@ class EventTest {
         assertTrue(event is DeletionEvent)
     }
 
+    @ParameterizedTest @MethodSource("provideAnyKindEvent2")
+    fun checkMoreEvents(event: Event) {
+        when (event) {
+            is MetadataEvent, is TextNoteEvent, is RecommendRelayEvent, is ContactListEvent, is EncryptedDmEvent -> Unit
+            is DeletionEvent -> println(event.toJson())
+            else -> println(event.toJson())
+        }
+    }
+
     companion object {
-        private val eventsJson: Map<String, List<String>> = listOf("0", "1", "2", "3", "4", "5", "all").associateWith {
+        private val eventsJson: Map<String, List<String>> = listOf("0", "1", "2", "3", "4", "5",
+            "all", "all2", "failLong", "failShort").associateWith {
             EventTest::class.java.getResource("/event_kind_$it.txt")!!
                 .readText()
                 .split("\n")
         }
-        private val events: Map<String, List<Event?>> = eventsJson.map {
-            it.key to it.value.map {
-                Event.fromJson(it)
-            }
-        }.toMap()
+
+        private val events: Map<String, List<Event?>> by lazy {
+            eventsJson.map {
+                it.key to try {
+                    it.value.map(Event.Companion::fromJson)
+                } catch (e: Exception) {
+                    println(e)
+                    listOf()
+                }
+            }.toMap()
+        }
 
         @JvmStatic fun provideAnyKindEventJson() = eventsJson["all"]!!.stream()
         @JvmStatic fun provideAnyKindEvent() = events["all"]!!.stream()
@@ -78,5 +92,7 @@ class EventTest {
         @JvmStatic fun provideContactListEvent() = events[ContactListEvent.kind.toString()]!!.stream()
         @JvmStatic fun provideEncryptedDmEvent() = events[EncryptedDmEvent.kind.toString()]!!.stream()
         @JvmStatic fun provideDeletionEvent() = events[DeletionEvent.kind.toString()]!!.stream()
+
+        @JvmStatic fun provideAnyKindEvent2() = (events["all2"]!! + events["failShort"]!! + events["failLong"]!!).stream()
     }
 }

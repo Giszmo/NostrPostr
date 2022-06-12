@@ -1,5 +1,7 @@
 package nostr.postr
 
+import nostr.postr.events.Event
+
 /**
  * The Nostr Client manages multiple personae the user may switch between. Events are received and
  * published through multiple relays.
@@ -30,11 +32,11 @@ object Client: RelayPool.Listener {
         listeners.forEach { it.onRelayStateChange(type, relay) }
     }
 
-    fun register(listener: Listener) {
+    fun subscribe(listener: Listener) {
         listeners.add(listener)
     }
 
-    fun unregister(listener: Listener): Boolean {
+    fun unsubscribe(listener: Listener): Boolean {
         return listeners.remove(listener)
     }
 

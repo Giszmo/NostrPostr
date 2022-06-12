@@ -9,6 +9,7 @@ import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import nostr.postr.databinding.ActivityMainBinding
+import nostr.postr.events.*
 
 class MainActivity : AppCompatActivity(), Client.Listener {
     private lateinit var binding: ActivityMainBinding
@@ -16,7 +17,7 @@ class MainActivity : AppCompatActivity(), Client.Listener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        Client.register(this)
+        Client.subscribe(this)
         Client.connect()
 
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -37,12 +38,19 @@ class MainActivity : AppCompatActivity(), Client.Listener {
     }
 
     override fun onNewEvent(event: Event) {
-        Log.d("NEW_MSG", "${event.pubkey} wrote kind ${event.kind}: ${event.content}")
+        when (event) {
+            is MetadataEvent,
+            is TextNoteEvent,
+            is RecommendRelayEvent,
+            is ContactListEvent,
+            is EncryptedDmEvent -> Unit
+            is DeletionEvent -> Log.d("DEL_EVENT", event.toJson())
+            else ->
+                if (event.kind !in listOf(6, 7, 17, 30, 7357)) Log.d("UNHANDLED_EVENT", event.toJson())
+        }
     }
 
     override fun onEvent(event: Event, relay: Relay) {
-        Log.d("EVENT", event.toJson())
-        // Log.d("MSG", "$relay sent $msg")
     }
 
     override fun onError(error: Error, relay: Relay) {
