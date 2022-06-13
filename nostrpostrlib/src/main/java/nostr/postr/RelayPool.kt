@@ -8,7 +8,7 @@ import nostr.postr.events.Event
 object RelayPool: Relay.Listener {
     private val relays: MutableList<Relay> = ArrayList()
     private val listeners = HashSet<Listener>()
-    private val events = HashSet<Event>()
+    private val eventIds = HashSet<String>()
 
     init {
         Constants.defaultRelays.forEach { addRelay(it) }
@@ -62,10 +62,13 @@ object RelayPool: Relay.Listener {
         fun onRelayStateChange(type: Int, relay: Relay)
     }
 
+    @Synchronized
     override fun onEvent(relay: Relay, event: Event) {
         listeners.forEach { it.onEvent(event, relay) }
-        if (events.add(event)) {
-            listeners.forEach { it.onNewEvent(event) }
+        synchronized(this) {
+            if (eventIds.add(event.id.toHex())) {
+                listeners.forEach { it.onNewEvent(event) }
+            }
         }
     }
 

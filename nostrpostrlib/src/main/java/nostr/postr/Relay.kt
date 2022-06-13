@@ -24,8 +24,8 @@ class Relay(
         val listener = object : WebSocketListener() {
             // private val NORMAL_CLOSURE_STATUS: Int = 1000
             override fun onOpen(webSocket: WebSocket, response: Response) {
-                webSocket.send("""["REQ","main-channel",${Client.filter}]""")
-                listeners.forEach { it.onRelayStateChange(this@Relay, 1) }
+                webSocket.send("""["REQ","main-channel",${Client.filters.joinToString()}]""")
+                listeners.forEach { it.onRelayStateChange(this@Relay, TYPE_CONNECT) }
                 // webSocket.close(NORMAL_CLOSURE_STATUS, "Goodbye!")
             }
 
@@ -36,7 +36,7 @@ class Relay(
                     val channel = msg[1].asString
                     if (type == "EVENT") {
                         val event = Event.fromJson(msg[2])
-                        listeners.forEach { it.onEvent(this@Relay, event!!) }
+                        listeners.forEach { it.onEvent(this@Relay, event) }
                     } else {
                         listeners.forEach {
                             it.onError(
@@ -53,7 +53,7 @@ class Relay(
             }
 
             override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
-                listeners.forEach { it.onRelayStateChange(this@Relay, 0) }
+                listeners.forEach { it.onRelayStateChange(this@Relay, TYPE_DISCONNECT) }
             }
 
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
@@ -68,6 +68,11 @@ class Relay(
     fun disconnect() {
         httpClient.dispatcher.executorService.shutdown()
         socket.close(1000, "Normal close")
+    }
+
+    companion object {
+        const val TYPE_DISCONNECT = 0
+        const val TYPE_CONNECT = 1
     }
 
     interface Listener {

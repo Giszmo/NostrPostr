@@ -8,11 +8,16 @@ import nostr.postr.events.Event
  * Events are stored with their respective persona.
  */
 object Client: RelayPool.Listener {
-    var filter: String = "{}" // By default, no filtering
     val personae: Array<Persona> = emptyArray()
     private val listeners = HashSet<Listener>()
+    internal var filters = arrayOf("{}")
+    internal var relays = Constants.defaultRelays
 
-    fun connect() {
+    fun connect(
+        filters: Array<String> = arrayOf("{}"),
+        relays: Array<Relay> = Constants.defaultRelays) {
+        this.filters = filters
+        this.relays = relays
         RelayPool.register(this)
         RelayPool.connect()
     }
