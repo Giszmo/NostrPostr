@@ -16,3 +16,4 @@ rootProject.name = "NostrPostr"
 include ':app'
 include ':nostrpostrlib'
 include ':bip-schnorr-kotlin'
+include ':examples'
