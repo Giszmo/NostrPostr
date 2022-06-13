@@ -1,8 +1,8 @@
 package nostr.postr
 
-import okhttp3.*
 import com.google.gson.JsonElement
 import nostr.postr.events.Event
+import okhttp3.*
 
 class Relay(
     val url: String,
@@ -11,6 +11,7 @@ class Relay(
 ) {
     private val httpClient = OkHttpClient()
     private val listeners = HashSet<Listener>()
+    private lateinit var socket: WebSocket
 
     fun register(listener: Listener) {
         listeners.add(listener)
@@ -23,7 +24,7 @@ class Relay(
         val listener = object : WebSocketListener() {
             // private val NORMAL_CLOSURE_STATUS: Int = 1000
             override fun onOpen(webSocket: WebSocket, response: Response) {
-                webSocket.send("""["REQ","main-channel",{}]""")
+                webSocket.send("""["REQ","main-channel",${Client.filter}]""")
                 listeners.forEach { it.onRelayStateChange(this@Relay, 1) }
                 // webSocket.close(NORMAL_CLOSURE_STATUS, "Goodbye!")
             }
@@ -61,11 +62,12 @@ class Relay(
                 }
             }
         }
-        httpClient.newWebSocket(request, listener)
+        socket = httpClient.newWebSocket(request, listener)
     }
 
     fun disconnect() {
-         httpClient.dispatcher.executorService.shutdown()
+        httpClient.dispatcher.executorService.shutdown()
+        socket.close(1000, "Normal close")
     }
 
     interface Listener {

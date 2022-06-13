@@ -2,7 +2,6 @@ package nostr.postr.examples
 
 import nostr.postr.Client
 import nostr.postr.Client.Listener
-import nostr.postr.Relay
 import nostr.postr.events.Event
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
@@ -13,19 +12,22 @@ class LoadJesterEvents {
         @JvmStatic
         fun main(vararg args: String) {
             val gson: Gson = GsonBuilder().create()
-            Client.subscribe(object: Listener {
-                override fun onEvent(event: Event, relay: Relay) {
+            var count = 0
+            val listener = object: Listener() {
+                override fun onNewEvent(event: Event) {
+                    count++
                     println(gson.fromJson(event.content, JsonObject::class.java))
                 }
-
-                override fun onNewEvent(event: Event) {}
-
-                override fun onError(error: Error, relay: Relay) {}
-
-                override fun onRelayStateChange(type: Int, relay: Relay) {}
-            })
+            }
+            Client.subscribe(listener)
+            // We request to get only kind 30 events - the kind the Jester Chess client uses
+            Client.filter = """{"kinds":[30]}"""
             Client.connect()
 
+            Thread.sleep(5_000)
+            Client.unsubscribe(listener)
+            Client.disconnect()
+            println("$count messages received.")
         }
     }
 }

@@ -18,6 +18,10 @@ object RelayPool: Relay.Listener {
         relays.forEach { it.connect() }
     }
 
+    fun disconnect() {
+        relays.forEach { it.disconnect() }
+    }
+
     fun addRelay(relay: Relay) {
         relay.register(this)
         relays += relay

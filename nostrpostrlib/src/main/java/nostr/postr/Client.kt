@@ -8,12 +8,18 @@ import nostr.postr.events.Event
  * Events are stored with their respective persona.
  */
 object Client: RelayPool.Listener {
+    var filter: String = "{}" // By default, no filtering
     val personae: Array<Persona> = emptyArray()
     private val listeners = HashSet<Listener>()
 
     fun connect() {
         RelayPool.register(this)
         RelayPool.connect()
+    }
+
+    fun disconnect() {
+        RelayPool.unregister(this)
+        RelayPool.disconnect()
     }
 
     override fun onEvent(event: Event, relay: Relay) {
@@ -40,26 +46,26 @@ object Client: RelayPool.Listener {
         return listeners.remove(listener)
     }
 
-    interface Listener {
+    abstract class Listener {
         /**
          * A new message was received
          */
-        fun onEvent(event: Event, relay: Relay)
+        open fun onEvent(event: Event, relay: Relay) = Unit
 
         /**
          * A new message was received
          */
-        fun onNewEvent(event: Event)
+        open fun onNewEvent(event: Event) = Unit
 
         /**
          * A new or repeat message was received
          */
 
-        fun onError(error: Error, relay: Relay)
+        open fun onError(error: Error, relay: Relay) = Unit
 
         /**
          * Connected to or disconnected from a relay
          */
-        fun onRelayStateChange(type: Int, relay: Relay)
+        open fun onRelayStateChange(type: Int, relay: Relay) = Unit
     }
 }
