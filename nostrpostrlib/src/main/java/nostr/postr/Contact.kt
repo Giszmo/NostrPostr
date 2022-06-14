@@ -1,3 +1,3 @@
 package nostr.postr
 
-data class Contact(val pubkey: String, val relayUri: String?)
+data class Contact(val pubKeyHex: String, val relayUri: String?)

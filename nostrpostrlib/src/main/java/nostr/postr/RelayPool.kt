@@ -79,4 +79,8 @@ object RelayPool: Relay.Listener {
     override fun onRelayStateChange(relay: Relay, type: Int) {
         listeners.forEach { it.onRelayStateChange(type, relay) }
     }
+
+    fun sendFilter() {
+        relays.forEach(Relay::sendFilter)
+    }
 }

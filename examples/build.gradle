@@ -1,6 +1,7 @@
 plugins {
     id 'java'
     id 'kotlin'
+    id 'org.jetbrains.kotlin.jvm'
 }
 
 java {
@@ -9,7 +10,8 @@ java {
 }
 
 dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.7.0"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.2"
     implementation project(path: ':nostrpostrlib')
     implementation "com.google.code.gson:gson:2.9.0"
 }

@@ -70,9 +70,17 @@ class Relay(
         socket.close(1000, "Normal close")
     }
 
+    fun sendFilter() {
+        // TODO: this results in the reception of many message duplicates!
+        val request = """["REQ","main-channel",${Client.filters.joinToString(",")}]"""
+        socket.send(request)
+    }
+
     companion object {
         const val TYPE_DISCONNECT = 0
         const val TYPE_CONNECT = 1
+
+        private var channelCounter = 0
     }
 
     interface Listener {

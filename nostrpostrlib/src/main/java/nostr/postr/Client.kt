@@ -10,11 +10,11 @@ import nostr.postr.events.Event
 object Client: RelayPool.Listener {
     val personae: Array<Persona> = emptyArray()
     private val listeners = HashSet<Listener>()
-    internal var filters = arrayOf("{}")
+    internal var filters: MutableList<String> = mutableListOf("{}")
     internal var relays = Constants.defaultRelays
 
     fun connect(
-        filters: Array<String> = arrayOf("{}"),
+        filters: MutableList<String> = mutableListOf("{}"),
         relays: Array<Relay> = Constants.defaultRelays) {
         this.filters = filters
         this.relays = relays
@@ -25,6 +25,11 @@ object Client: RelayPool.Listener {
     fun disconnect() {
         RelayPool.unregister(this)
         RelayPool.disconnect()
+    }
+
+    fun addFilter(filter: String) {
+        filters.add(filter)
+        RelayPool.sendFilter()
     }
 
     override fun onEvent(event: Event, relay: Relay) {
