@@ -1,3 +1,0 @@
-[submodule "bip-schnorr-kotlin"]
-	path = bip-schnorr-kotlin
-	url = https://github.com/Giszmo/bip-schnorr-kotlin.git

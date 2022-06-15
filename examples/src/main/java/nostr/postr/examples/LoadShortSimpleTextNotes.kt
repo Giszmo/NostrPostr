@@ -31,7 +31,6 @@ class LoadShortSimpleTextNotes {
         @JvmStatic
         fun main(vararg args: String) {
             Client.subscribe(listener)
-            // We request to get only kind 30 events - the kind the Jester Chess client uses
             val filters = mutableListOf("""{"kinds":[1]}""")
             Client.connect(filters)
         }

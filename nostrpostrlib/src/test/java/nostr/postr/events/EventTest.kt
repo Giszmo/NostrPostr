@@ -20,7 +20,7 @@ class EventTest {
         assertEquals(String(Hex.encode(event.id)), String(Hex.encode(generatedId)))
     }
 
-    @ParameterizedTest @MethodSource("provideAnyKindEvent")
+    @ParameterizedTest @MethodSource("provideAnyKindEventAll")
     fun checkSignature(event: Event) {
         event.checkSignature()
     }
@@ -94,5 +94,7 @@ class EventTest {
         @JvmStatic fun provideDeletionEvent() = events[DeletionEvent.kind.toString()]!!.stream()
 
         @JvmStatic fun provideAnyKindEvent2() = (events["all2"]!! + events["failShort"]!! + events["failLong"]!!).stream()
+        @JvmStatic fun provideAnyKindEventAll() = listOf("0", "1", "2", "3", "4", "5",
+            "all", "all2").map { events[it]!! }.fold(listOf<Event>()) { acc, list -> acc + list as List<Event> }.stream()
     }
 }

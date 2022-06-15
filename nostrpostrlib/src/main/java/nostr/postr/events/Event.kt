@@ -2,7 +2,7 @@ package nostr.postr.events
 
 import com.google.gson.*
 import com.google.gson.annotations.SerializedName
-import de.leowandersleb.lib_bip_schnorr_kotlin.Schnorr
+import fr.acinq.secp256k1.Secp256k1
 import nostr.postr.*
 import org.spongycastle.util.encoders.Hex
 import java.lang.reflect.Type
@@ -32,6 +32,9 @@ open class Event(
         return sha256.digest(rawEventJson.toByteArray())
     }
 
+    /**
+     * Checks if the ID is correct and then if the pubKey's secret key signed the event.
+     */
     fun checkSignature() {
         if (!id.contentEquals(generateId())) {
             throw Error(
@@ -41,7 +44,7 @@ open class Event(
                    |  Generated: ${generateId().toHex()}""".trimIndent()
             )
         }
-        Schnorr.verify(id, pubKey, sig)
+        secp256k1.verifySchnorr(sig, id, pubKey)
     }
 
     class EventDeserializer : JsonDeserializer<Event> {
@@ -100,6 +103,8 @@ open class Event(
     }
 
     companion object {
+        private val secp256k1 = Secp256k1.get()
+
         val sha256: MessageDigest = MessageDigest.getInstance("SHA-256")
         val gson: Gson = GsonBuilder()
             .disableHtmlEscaping()

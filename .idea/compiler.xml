@@ -3,6 +3,9 @@
   <component name="CompilerConfiguration">
     <bytecodeTargetLevel target="1.8">
       <module name="NostrPostr.app" target="11" />
+      <module name="NostrPostr.nostrpostrlib" target="11" />
+      <module name="NostrPostr.nostrpostrlib.main" target="11" />
+      <module name="NostrPostr.nostrpostrlib.test" target="11" />
     </bytecodeTargetLevel>
   </component>
 </project>
