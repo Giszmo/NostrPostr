@@ -2,22 +2,49 @@ package nostr.postr
 
 import android.os.Bundle
 import android.util.Log
-import com.google.android.material.bottomnavigation.BottomNavigationView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import nostr.postr.databinding.ActivityMainBinding
 import nostr.postr.events.*
 
-class MainActivity : AppCompatActivity(), Client.Listener {
+class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
+    private val clientListener = object : Client.Listener() {
+        override fun onNewEvent(event: Event) {
+            when (event.kind) {
+                MetadataEvent.kind, // 0
+                TextNoteEvent.kind, // 1
+                RecommendRelayEvent.kind, // 2
+                ContactListEvent.kind, // 3
+                EncryptedDmEvent.kind, // 4
+                DeletionEvent.kind, // 5
+                in listOf(6, 7, 17, 30, 40, 7357) -> Unit
+                else -> Log.d("UNHANDLED_EVENT", event.toJson())
+            }
+        }
+
+        override fun onError(error: Error, relay: Relay) {
+            Log.e("ERROR", "Relay ${relay.url}: ${error.message}")
+        }
+
+        override fun onRelayStateChange(type: Relay.Type, relay: Relay) {
+            Log.d("RELAY", "Relay ${relay.url} ${when (type) {
+                Relay.Type.CONNECT -> "connected."
+                Relay.Type.DISCONNECT -> "disconnected."
+                Relay.Type.EOSE -> "sent all events it had stored."
+            }}")
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        Client.subscribe(this)
+        Client.subscribe(clientListener)
+        Client.lenient = true
         Client.connect()
 
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -35,29 +62,5 @@ class MainActivity : AppCompatActivity(), Client.Listener {
         )
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
-    }
-
-    override fun onNewEvent(event: Event) {
-        when (event) {
-            is MetadataEvent,
-            is TextNoteEvent,
-            is RecommendRelayEvent,
-            is ContactListEvent,
-            is EncryptedDmEvent -> Unit
-            is DeletionEvent -> Log.d("DEL_EVENT", event.toJson())
-            else ->
-                if (event.kind !in listOf(6, 7, 17, 30, 7357)) Log.d("UNHANDLED_EVENT", event.toJson())
-        }
-    }
-
-    override fun onEvent(event: Event, relay: Relay) {
-    }
-
-    override fun onError(error: Error, relay: Relay) {
-        Log.e("ERROR", "Relay ${relay.url}: ${error.message}")
-    }
-
-    override fun onRelayStateChange(type: Int, relay: Relay) {
-        Log.d("RELAY", "Relay ${relay.url} ${if (type == 0) "connected" else "disconnected"}")
     }
 }

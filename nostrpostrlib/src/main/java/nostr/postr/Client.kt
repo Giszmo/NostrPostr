@@ -8,6 +8,16 @@ import nostr.postr.events.Event
  * Events are stored with their respective persona.
  */
 object Client: RelayPool.Listener {
+    /**
+     * Lenient mode:
+     *
+     * true: For maximum compatibility. If you want to play ball with sloppy counter parts, use
+     *       this.
+     * false: For developers who want to make protocol compliant counter parts. If your software
+     *        produces events that fail to deserialize in strict mode, you should probably fix
+     *        something.
+     **/
+    var lenient: Boolean = false
     val personae: Array<Persona> = emptyArray()
     private val listeners = HashSet<Listener>()
     internal var filters: MutableList<String> = mutableListOf("{}")
@@ -44,7 +54,7 @@ object Client: RelayPool.Listener {
         listeners.forEach { it.onError(error, relay) }
     }
 
-    override fun onRelayStateChange(type: Int, relay: Relay) {
+    override fun onRelayStateChange(type: Relay.Type, relay: Relay) {
         listeners.forEach { it.onRelayStateChange(type, relay) }
     }
 
@@ -76,6 +86,6 @@ object Client: RelayPool.Listener {
         /**
          * Connected to or disconnected from a relay
          */
-        open fun onRelayStateChange(type: Int, relay: Relay) = Unit
+        open fun onRelayStateChange(type: Relay.Type, relay: Relay) = Unit
     }
 }

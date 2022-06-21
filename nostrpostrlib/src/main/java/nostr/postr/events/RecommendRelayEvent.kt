@@ -10,7 +10,7 @@ class RecommendRelayEvent(
     content: String,
     sig: ByteArray
 ): Event(id, pubKey, createdAt, kind, tags, content, sig) {
-    @Transient val relay: String = URI.create(content).toString()
+    @Transient val relay: URI = URI.create(content)
 
     companion object {
         const val kind = 2

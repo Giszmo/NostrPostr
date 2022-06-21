@@ -25,7 +25,7 @@ class Relay(
             // private val NORMAL_CLOSURE_STATUS: Int = 1000
             override fun onOpen(webSocket: WebSocket, response: Response) {
                 webSocket.send("""["REQ","main-channel",${Client.filters.joinToString()}]""")
-                listeners.forEach { it.onRelayStateChange(this@Relay, TYPE_CONNECT) }
+                listeners.forEach { it.onRelayStateChange(this@Relay, Type.CONNECT) }
                 // webSocket.close(NORMAL_CLOSURE_STATUS, "Goodbye!")
             }
 
@@ -34,11 +34,15 @@ class Relay(
                     val msg = Event.gson.fromJson(text, JsonElement::class.java).asJsonArray
                     val type = msg[0].asString
                     val channel = msg[1].asString
-                    if (type == "EVENT") {
-                        val event = Event.fromJson(msg[2])
-                        listeners.forEach { it.onEvent(this@Relay, event) }
-                    } else {
-                        listeners.forEach {
+                    when (type) {
+                        "EVENT" -> {
+                            val event = Event.fromJson(msg[2])
+                            listeners.forEach { it.onEvent(this@Relay, event) }
+                        }
+                        "EOSE" -> listeners.forEach {
+                            it.onRelayStateChange(this@Relay, Type.EOSE)
+                        }
+                        else -> listeners.forEach {
                             it.onError(
                                 this@Relay,
                                 Error("Unknown type $type on channel $channel. Msg was $text")
@@ -53,7 +57,7 @@ class Relay(
             }
 
             override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
-                listeners.forEach { it.onRelayStateChange(this@Relay, TYPE_DISCONNECT) }
+                listeners.forEach { it.onRelayStateChange(this@Relay, Type.DISCONNECT) }
             }
 
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
@@ -76,10 +80,16 @@ class Relay(
         socket.send(request)
     }
 
-    companion object {
-        const val TYPE_DISCONNECT = 0
-        const val TYPE_CONNECT = 1
+    enum class Type {
+        // Websocket connected
+        CONNECT,
+        // Websocket disconnected
+        DISCONNECT,
+        // End Of Stored Events
+        EOSE
+    }
 
+    companion object {
         private var channelCounter = 0
     }
 
@@ -97,6 +107,6 @@ class Relay(
          *
          * @param type is 0 for disconnect and 1 for connect
          */
-        fun onRelayStateChange(relay: Relay, type: Int)
+        fun onRelayStateChange(relay: Relay, type: Type)
     }
 }

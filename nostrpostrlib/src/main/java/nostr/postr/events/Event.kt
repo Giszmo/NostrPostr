@@ -128,7 +128,8 @@ open class Event(
             7 -> this // no content but e and p tags. Boosts
             17 -> this // nwiki. tag w->subject https://github.com/fiatjaf/nwiki
             30 -> this // jester https://jesterui.github.io/
-            7357 -> this // just an e tag
+            40 -> this // some market place?
+            7357 -> this // events that contain only an e tag?
             else -> this
         }
     }

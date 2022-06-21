@@ -56,10 +56,7 @@ object RelayPool: Relay.Listener {
 
         fun onError(error: Error, relay: Relay)
 
-        /**
-         * Connected to or disconnected from a relay
-         */
-        fun onRelayStateChange(type: Int, relay: Relay)
+        fun onRelayStateChange(type: Relay.Type, relay: Relay)
     }
 
     @Synchronized
@@ -76,7 +73,7 @@ object RelayPool: Relay.Listener {
         listeners.forEach { it.onError(error, relay) }
     }
 
-    override fun onRelayStateChange(relay: Relay, type: Int) {
+    override fun onRelayStateChange(relay: Relay, type: Relay.Type) {
         listeners.forEach { it.onRelayStateChange(type, relay) }
     }
 
