@@ -1,10 +1,10 @@
 package nostr.postr.events
 
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.spongycastle.util.encoders.Hex
+import java.lang.Exception
 import java.util.stream.Collectors
 import java.util.stream.Stream
 import kotlin.streams.toList
@@ -46,6 +46,15 @@ class EventTest {
         assertTrue(event is RecommendRelayEvent)
     }
 
+    @ParameterizedTest @MethodSource("provideRecommendRelayEventLenient")
+    fun checkRecommendRelayEventLenient(eventJson: String) {
+        val event = Event.fromJson(eventJson, true)
+        assertTrue(event is RecommendRelayEvent)
+        assertThrowsExactly(IllegalArgumentException::class.java) {
+            Event.fromJson(eventJson, false)
+        }
+    }
+
     @ParameterizedTest @MethodSource("provideContactListEvent")
     fun checkContactListEvent(event: Event) {
         assertTrue(event is ContactListEvent)
@@ -75,6 +84,7 @@ class EventTest {
         @JvmStatic fun provideMetadataEvent() = events(MetadataEvent.kind.toString())
         @JvmStatic fun provideTextNoteEvent() = events(TextNoteEvent.kind.toString())
         @JvmStatic fun provideRecommendRelayEvent() = events(RecommendRelayEvent.kind.toString())
+        @JvmStatic fun provideRecommendRelayEventLenient() = eventsJson("2_lenient")
         @JvmStatic fun provideContactListEvent() = events(ContactListEvent.kind.toString())
         @JvmStatic fun provideEncryptedDmEvent() = events(EncryptedDmEvent.kind.toString())
         @JvmStatic fun provideDeletionEvent() = events(DeletionEvent.kind.toString())

@@ -113,14 +113,14 @@ open class Event(
             .registerTypeAdapter(ByteArray::class.java, ByteArraySerializer())
             .create()
 
-        fun fromJson(json: String): Event = gson.fromJson(json, Event::class.java).getRefinedEvent()
+        fun fromJson(json: String, lenient: Boolean = false): Event = gson.fromJson(json, Event::class.java).getRefinedEvent(lenient)
 
-        fun fromJson(json: JsonElement): Event = gson.fromJson(json, Event::class.java).getRefinedEvent()
+        fun fromJson(json: JsonElement, lenient: Boolean = false): Event = gson.fromJson(json, Event::class.java).getRefinedEvent(lenient)
 
-        fun Event.getRefinedEvent(): Event = when (kind) {
+        fun Event.getRefinedEvent(lenient: Boolean = false): Event = when (kind) {
             MetadataEvent.kind -> MetadataEvent(id, pubKey, createdAt, tags, content, sig)
             TextNoteEvent.kind -> TextNoteEvent(id, pubKey, createdAt, tags, content, sig)
-            RecommendRelayEvent.kind -> RecommendRelayEvent(id, pubKey, createdAt, tags, content, sig)
+            RecommendRelayEvent.kind -> RecommendRelayEvent(id, pubKey, createdAt, tags, content, sig, lenient)
             ContactListEvent.kind -> ContactListEvent(id, pubKey, createdAt, tags, content, sig)
             EncryptedDmEvent.kind -> EncryptedDmEvent(id, pubKey, createdAt, tags, content, sig)
             DeletionEvent.kind -> DeletionEvent(id, pubKey, createdAt, tags, content, sig)

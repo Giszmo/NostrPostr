@@ -8,9 +8,17 @@ class RecommendRelayEvent(
     createdAt: Long,
     tags: List<List<String>>,
     content: String,
-    sig: ByteArray
+    sig: ByteArray,
+    lenient: Boolean = false
 ): Event(id, pubKey, createdAt, kind, tags, content, sig) {
-    @Transient val relay: URI = URI.create(content)
+    @Transient val relay: URI
+
+    init {
+        relay = if (lenient)
+            URI.create(content.trim())
+        else
+            URI.create(content)
+    }
 
     companion object {
         const val kind = 2
