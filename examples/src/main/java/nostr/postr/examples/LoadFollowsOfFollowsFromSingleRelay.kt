@@ -12,13 +12,9 @@ import nostr.postr.toHex
 
 class LoadFollowsOfFollowsFromSingleRelay {
     companion object {
-        private val relays = arrayOf(
-            Relay("wss://nostr-relay.untethr.me", read = true, write = true)
-        )
+        private val relays = arrayOf(Relay("wss://nostr-relay.untethr.me", true, false))
         private val pubKey = "46fcbe3065eaf1ae7811465924e48923363ff3f526bd6f73d7c184b16bd8ce4d"
-        private val follows: MutableSet<String> = mutableSetOf()
-        private val followsOfFollows: MutableSet<String> = mutableSetOf()
-        private val followsOfFollowsOfFollows: MutableSet<String> = mutableSetOf()
+        private val follows: Array<MutableSet<String>> = arrayOf(mutableSetOf(), mutableSetOf(), mutableSetOf())
         private var followsReceived = 0
         private var followsOfFollowsReceived = 0
         private var metadataReceived = 0
@@ -39,32 +35,32 @@ class LoadFollowsOfFollowsFromSingleRelay {
 
         private fun onContactList(event: ContactListEvent) {
             if (event.pubKey.toHex() == pubKey) {
-                follows.addAll(event.follows.map { it.pubKeyHex })
-                val filter = """{"kinds":[${ContactListEvent.kind}],"authors":[${follows.joinToString(",") { "\"$it\"" }}]}"""
+                follows[0].addAll(event.follows.map { it.pubKeyHex })
+                val filter = """{"kinds":[${ContactListEvent.kind}],"authors":[${follows[0].joinToString(",") { "\"$it\"" }}]}"""
                 Client.addFilter(filter)
                 println("Phase two: Requesting user's follows' follows")
-            } else if (event.pubKey.toHex() in follows) {
-                followsOfFollows.addAll(event.follows.map { it.pubKeyHex })
+            } else if (event.pubKey.toHex() in follows[0]) {
+                follows[1].addAll(event.follows.map { it.pubKeyHex })
                 followsReceived++
                 GlobalScope.launch {
                     val x = followsReceived
                     delay(2_000)
                     if (x == followsReceived) {
                         val filter =
-                            """{"kinds":[${ContactListEvent.kind}],"authors":[${followsOfFollows.joinToString(",") { "\"$it\"" }}]}"""
+                            """{"kinds":[${ContactListEvent.kind}],"authors":[${follows[1].joinToString(",") { "\"$it\"" }}]}"""
                         Client.addFilter(filter)
                         println("Phase three: Requesting user's follows' follows' follows")
                     }
                 }
-            } else if (event.pubKey.toHex() in followsOfFollows) {
-                followsOfFollowsOfFollows.addAll(event.follows.map { it.pubKeyHex })
+            } else if (event.pubKey.toHex() in follows[1]) {
+                follows[2].addAll(event.follows.map { it.pubKeyHex })
                 followsOfFollowsReceived ++
                 GlobalScope.launch {
                     val x = followsOfFollowsReceived
                     delay(2_000)
                     if (x == followsOfFollowsReceived) {
                         val filter =
-                            """{"kinds":[${MetadataEvent.kind}],"authors":[${(followsOfFollowsOfFollows + followsOfFollows + follows + pubKey).joinToString(",") { "\"$it\"" }}]}"""
+                            """{"kinds":[${MetadataEvent.kind}],"authors":[${(follows[2] + follows[1] + follows[0] + pubKey).joinToString(",") { "\"$it\"" }}]}"""
                         Client.addFilter(filter)
                         println("Phase four: Requesting everybody's names")
                     }
@@ -85,16 +81,16 @@ class LoadFollowsOfFollowsFromSingleRelay {
                     println("Phase five: Results\n")
                     println("Suspect Zero:")
                     println("f0: ${pubKey} ${keyNames[pubKey]}")
-                    println("Following these ${follows.size}:")
-                    follows.forEach {
+                    println("Following these ${follows[0].size}:")
+                    follows[0].forEach {
                         println("f1: ${it} ${keyNames[it]}")
                     }
-                    println("Following these further (circular follows removed) ${followsOfFollows.size}:")
-                    followsOfFollows.forEach {
+                    println("Following these further (circular follows removed) ${follows[1].size}:")
+                    follows[1].forEach {
                         println("f2: ${it} ${keyNames[it]}")
                     }
-                    println("Following these further (circular follows removed) ${followsOfFollowsOfFollows.size}:")
-                    followsOfFollowsOfFollows.forEach {
+                    println("Following these further (circular follows removed) ${follows[2].size}:")
+                    follows[2].forEach {
                         println("f3: ${it} ${keyNames[it]}")
                     }
                     println("\nTotal Events received: ${eventsReceived.size}")

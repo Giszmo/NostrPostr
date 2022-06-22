@@ -6,8 +6,8 @@ import okhttp3.*
 
 class Relay(
     val url: String,
-    var read: Boolean,
-    var write: Boolean
+    var read: Boolean = true,
+    var write: Boolean = true
 ) {
     private val httpClient = OkHttpClient()
     private val listeners = HashSet<Listener>()
