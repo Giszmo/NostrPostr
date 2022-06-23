@@ -36,9 +36,14 @@ class LoadJesterEvents {
             // We request to get only kind 30 events - the kind the Jester Chess client uses
             val filters = mutableListOf("""{"kinds":[30]}""")
             Client.connect(filters)
+            while (running) {
+                Thread.sleep(100)
+            }
         }
 
+        var running = true
         private fun stop() {
+            running = false
             Client.unsubscribe(listener)
             Client.disconnect()
         }

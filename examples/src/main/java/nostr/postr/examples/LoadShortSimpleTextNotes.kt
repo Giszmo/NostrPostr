@@ -33,9 +33,14 @@ class LoadShortSimpleTextNotes {
             Client.subscribe(listener)
             val filters = mutableListOf("""{"kinds":[1]}""")
             Client.connect(filters)
+            while (running) {
+                Thread.sleep(100)
+            }
         }
 
+        var running = true
         private fun stop() {
+            running = false
             Client.unsubscribe(listener)
             Client.disconnect()
         }

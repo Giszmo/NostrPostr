@@ -11,4 +11,12 @@ dependencies {
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.2"
     implementation project(path: ':nostrpostrlib')
     implementation "com.google.code.gson:gson:2.9.0"
+    implementation 'org.junit.jupiter:junit-jupiter:5.8.2'
+}
+
+tasks.test {
+    useJUnitPlatform()
+    testLogging {
+        events("passed", "skipped", "failed")
+    }
 }

@@ -107,9 +107,14 @@ class LoadFollowsOfFollowsFromSingleRelay {
             println("Phase one: Requesting user's follows")
             val filters = mutableListOf("""{"kinds":[${ContactListEvent.kind}],"authors":["$pubKey"]}""")
             Client.connect(filters, relays)
+            while (running) {
+                Thread.sleep(100)
+            }
         }
 
+        var running = true
         private fun stop() {
+            running = false
             Client.unsubscribe(listener)
             Client.disconnect()
         }
