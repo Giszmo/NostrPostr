@@ -20,12 +20,13 @@ object Client: RelayPool.Listener {
     var lenient: Boolean = false
     val personae: Array<Persona> = emptyArray()
     private val listeners = HashSet<Listener>()
-    internal var filters: MutableList<String> = mutableListOf("{}")
+    internal var filters: MutableList<Filter> = mutableListOf(Filter())
     internal var relays = Constants.defaultRelays
 
     fun connect(
-        filters: MutableList<String> = mutableListOf("{}"),
-        relays: Array<Relay> = Constants.defaultRelays) {
+        filters: MutableList<Filter> = mutableListOf(Filter()),
+        relays: Array<Relay> = Constants.defaultRelays
+    ) {
         this.filters = filters
         this.relays = relays
         RelayPool.register(this)
@@ -37,7 +38,7 @@ object Client: RelayPool.Listener {
         RelayPool.disconnect()
     }
 
-    fun addFilter(filter: String) {
+    fun addFilter(filter: Filter) {
         filters.add(filter)
         RelayPool.sendFilter()
     }

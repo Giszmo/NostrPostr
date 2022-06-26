@@ -1,11 +1,8 @@
 package nostr.postr.examples
 
-import nostr.postr.Client
-import nostr.postr.Constants
-import nostr.postr.Relay
+import nostr.postr.*
 import nostr.postr.events.ContactListEvent
 import nostr.postr.events.Event
-import nostr.postr.toHex
 
 /**
  * Get a user's meta data
@@ -31,8 +28,7 @@ class LoadOneContactListTrackingRelays {
         fun main(vararg args: String) {
             println("Requesting Contact List from ${Constants.defaultRelays.size} relays, measuring time for 10s ...")
             Client.subscribe(listener)
-            val filters = mutableListOf("""{"kinds":[${ContactListEvent.kind}],"authors":["$pubKey"]}""")
-            Client.connect(filters)
+            Client.connect(mutableListOf(Filter(kinds = listOf(ContactListEvent.kind), authors = listOf(pubKey))))
             Thread.sleep(3_000)
             stop()
         }

@@ -4,6 +4,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import nostr.postr.Client
+import nostr.postr.Filter
 import nostr.postr.Relay
 import nostr.postr.events.ContactListEvent
 import nostr.postr.events.Event
@@ -36,8 +37,8 @@ class LoadFollowsOfFollowsFromSingleRelay {
         private fun onContactList(event: ContactListEvent) {
             if (event.pubKey.toHex() == pubKey) {
                 follows[0].addAll(event.follows.map { it.pubKeyHex })
-                val filter = """{"kinds":[${ContactListEvent.kind}],"authors":[${follows[0].joinToString(",") { "\"$it\"" }}]}"""
-                Client.addFilter(filter)
+                Client.addFilter(Filter(kinds = listOf(ContactListEvent.kind),
+                    authors = follows[0].toList()))
                 println("Phase two: Requesting user's follows' follows")
             } else if (event.pubKey.toHex() in follows[0]) {
                 follows[1].addAll(event.follows.map { it.pubKeyHex })
@@ -46,9 +47,8 @@ class LoadFollowsOfFollowsFromSingleRelay {
                     val x = followsReceived
                     delay(2_000)
                     if (x == followsReceived) {
-                        val filter =
-                            """{"kinds":[${ContactListEvent.kind}],"authors":[${follows[1].joinToString(",") { "\"$it\"" }}]}"""
-                        Client.addFilter(filter)
+                        Client.addFilter(Filter(kinds = listOf(ContactListEvent.kind),
+                            authors = follows[1].toList()))
                         println("Phase three: Requesting user's follows' follows' follows")
                     }
                 }
@@ -59,9 +59,8 @@ class LoadFollowsOfFollowsFromSingleRelay {
                     val x = followsOfFollowsReceived
                     delay(2_000)
                     if (x == followsOfFollowsReceived) {
-                        val filter =
-                            """{"kinds":[${MetadataEvent.kind}],"authors":[${(follows[2] + follows[1] + follows[0] + pubKey).joinToString(",") { "\"$it\"" }}]}"""
-                        Client.addFilter(filter)
+                        Client.addFilter(Filter(kinds = listOf(MetadataEvent.kind),
+                            authors = (follows[2] + follows[1] + follows[0] + pubKey).toList()))
                         println("Phase four: Requesting everybody's names")
                     }
                 }
@@ -105,8 +104,7 @@ class LoadFollowsOfFollowsFromSingleRelay {
         fun main(vararg args: String) {
             Client.subscribe(listener)
             println("Phase one: Requesting user's follows")
-            val filters = mutableListOf("""{"kinds":[${ContactListEvent.kind}],"authors":["$pubKey"]}""")
-            Client.connect(filters, relays)
+            Client.connect(mutableListOf(Filter(kinds = listOf(ContactListEvent.kind), authors = listOf(pubKey))), relays)
             while (running) {
                 Thread.sleep(100)
             }

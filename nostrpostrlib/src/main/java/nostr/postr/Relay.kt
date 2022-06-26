@@ -22,11 +22,9 @@ class Relay(
     fun connect() {
         val request = Request.Builder().url(url).build()
         val listener = object : WebSocketListener() {
-            // private val NORMAL_CLOSURE_STATUS: Int = 1000
             override fun onOpen(webSocket: WebSocket, response: Response) {
-                webSocket.send("""["REQ","main-channel",${Client.filters.joinToString()}]""")
+                webSocket.send("""["REQ","main-channel",${Client.filters.joinToString() {it.toJson()} }]""")
                 listeners.forEach { it.onRelayStateChange(this@Relay, Type.CONNECT) }
-                // webSocket.close(NORMAL_CLOSURE_STATUS, "Goodbye!")
             }
 
             override fun onMessage(webSocket: WebSocket, text: String) {
@@ -36,11 +34,15 @@ class Relay(
                     val channel = msg[1].asString
                     when (type) {
                         "EVENT" -> {
-                            val event = Event.fromJson(msg[2])
+                            val event = Event.fromJson(msg[2], Client.lenient)
                             listeners.forEach { it.onEvent(this@Relay, event) }
                         }
                         "EOSE" -> listeners.forEach {
                             it.onRelayStateChange(this@Relay, Type.EOSE)
+                        }
+                        "NOTICE" -> listeners.forEach {
+                            // "channel" being the second string in the string array ...
+                            it.onError(this@Relay, Error("Relay sent notice: $channel"))
                         }
                         else -> listeners.forEach {
                             it.onError(
@@ -76,7 +78,7 @@ class Relay(
 
     fun sendFilter() {
         // TODO: this results in the reception of many message duplicates!
-        val request = """["REQ","main-channel",${Client.filters.joinToString(",")}]"""
+        val request = """["REQ","main-channel",${Client.filters.joinToString(",") { it.toJson() }}]"""
         socket.send(request)
     }
 
@@ -87,10 +89,6 @@ class Relay(
         DISCONNECT,
         // End Of Stored Events
         EOSE
-    }
-
-    companion object {
-        private var channelCounter = 0
     }
 
     interface Listener {

@@ -1,6 +1,7 @@
 package nostr.postr.examples
 
 import nostr.postr.Client
+import nostr.postr.Filter
 import nostr.postr.events.Event
 import nostr.postr.events.MetadataEvent
 import nostr.postr.toHex
@@ -30,8 +31,7 @@ class LoadOneUserProfile {
         @JvmStatic
         fun main(vararg args: String) {
             Client.subscribe(listener)
-            val filters = mutableListOf("""{"kinds":[${MetadataEvent.kind}],"authors":["$pubKey"]}""")
-            Client.connect(filters)
+            Client.connect(mutableListOf(Filter(kinds = listOf(MetadataEvent.kind), authors = listOf(pubKey))))
             while (running) {
                 Thread.sleep(100)
             }
