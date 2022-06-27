@@ -13,7 +13,7 @@ class ContactListEvent(
     createdAt: Long,
     tags: List<List<String>>,
     content: String,
-    sig: ByteArray
+    sig: ByteArray?
 ): Event(id, pubKey, createdAt, kind, tags, content, sig) {
     @Transient val follows: List<Contact>
     @Transient val relayUse: Map<String, ReadWrite>?

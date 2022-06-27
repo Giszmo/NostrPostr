@@ -6,7 +6,7 @@ class DeletionEvent(
     createdAt: Long,
     tags: List<List<String>>,
     content: String,
-    sig: ByteArray
+    sig: ByteArray?
 ): Event(id, pubKey, createdAt, kind, tags, content, sig) {
     @Transient val deleteEvents: List<String>
 

@@ -6,7 +6,7 @@ class TextNoteEvent(
     createdAt: Long,
     tags: List<List<String>>,
     content: String,
-    sig: ByteArray
+    sig: ByteArray?
 ): Event(id, pubKey, createdAt, kind, tags, content, sig) {
     // TODO: reply to ... tag handling.
     companion object {

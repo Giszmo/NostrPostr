@@ -8,7 +8,7 @@ class RecommendRelayEvent(
     createdAt: Long,
     tags: List<List<String>>,
     content: String,
-    sig: ByteArray,
+    sig: ByteArray?,
     lenient: Boolean = false
 ): Event(id, pubKey, createdAt, kind, tags, content, sig) {
     @Transient val relay: URI

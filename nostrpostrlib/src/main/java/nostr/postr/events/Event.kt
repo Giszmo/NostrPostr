@@ -9,13 +9,13 @@ import java.lang.reflect.Type
 import java.security.MessageDigest
 
 open class Event(
-    val id: ByteArray,
+    var id: ByteArray,
     @SerializedName("pubkey") val pubKey: ByteArray,
     @SerializedName("created_at") val createdAt: Long,
     val kind: Int,
     val tags: List<List<String>>,
     val content: String,
-    val sig: ByteArray
+    var sig: ByteArray?
 ) {
     fun toJson(): String = gson.toJson(this)
 
@@ -44,7 +44,7 @@ open class Event(
                    |  Generated: ${generateId().toHex()}""".trimIndent()
             )
         }
-        secp256k1.verifySchnorr(sig, id, pubKey)
+        secp256k1.verifySchnorr(sig!!, id, pubKey)
     }
 
     class EventDeserializer : JsonDeserializer<Event> {
@@ -89,7 +89,7 @@ open class Event(
                     }
                 })
                 addProperty("content", src.content)
-                addProperty("sig", src.sig.toHex())
+                addProperty("sig", src.sig!!.toHex())
             }
         }
     }
@@ -131,6 +131,12 @@ open class Event(
             40 -> this // some market place?
             7357 -> this // events that contain only an e tag?
             else -> this
+        }
+
+        fun Event.sign(privateKey: ByteArray) {
+            check(pubKey.contentEquals(secp256k1.pubKeyCompress(secp256k1.pubkeyCreate(privateKey)).copyOfRange(1, 33)))
+            id = generateId()
+            sig = secp256k1.signSchnorr(id, privateKey, null)
         }
     }
 }
