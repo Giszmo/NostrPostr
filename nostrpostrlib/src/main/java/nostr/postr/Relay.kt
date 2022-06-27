@@ -82,6 +82,10 @@ class Relay(
         socket.send(request)
     }
 
+    fun send(signedEvent: Event) {
+        socket.send("""["EVENT",${signedEvent.toJson()}]""")
+    }
+
     enum class Type {
         // Websocket connected
         CONNECT,

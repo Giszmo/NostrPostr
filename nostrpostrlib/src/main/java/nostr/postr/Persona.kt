@@ -26,8 +26,9 @@ class Persona(
     val follows: Array<ByteArray>? = null
 
     fun sign(event: Event): Event {
-        val sig = secp256k1.sign(event.id, privateKey!!)
-        return Event(event.id, publicKey!!, event.createdAt, event.kind, event.tags, event.content, sig).getRefinedEvent()
+        val eventId = event.generateId()
+        val sig = secp256k1.sign(eventId, privateKey!!)
+        return Event(eventId, publicKey!!, event.createdAt, event.kind, event.tags, event.content, sig).getRefinedEvent()
     }
 
     companion object {

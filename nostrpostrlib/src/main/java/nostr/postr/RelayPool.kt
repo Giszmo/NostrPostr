@@ -80,4 +80,8 @@ object RelayPool: Relay.Listener {
     fun sendFilter() {
         relays.forEach(Relay::sendFilter)
     }
+
+    fun send(signedEvent: Event) {
+        relays.forEach { it.send(signedEvent) }
+    }
 }

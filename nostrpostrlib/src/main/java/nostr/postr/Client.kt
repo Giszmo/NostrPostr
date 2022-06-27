@@ -67,6 +67,10 @@ object Client: RelayPool.Listener {
         return listeners.remove(listener)
     }
 
+    fun send(signedEvent: Event) {
+        RelayPool.send(signedEvent)
+    }
+
     abstract class Listener {
         /**
          * A new message was received

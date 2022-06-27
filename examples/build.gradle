@@ -12,6 +12,8 @@ dependencies {
     implementation project(path: ':nostrpostrlib')
     implementation "com.google.code.gson:gson:2.9.0"
     implementation 'org.junit.jupiter:junit-jupiter:5.8.2'
+    implementation 'com.madgag.spongycastle:core:1.51.0.0'
+    implementation 'com.madgag.spongycastle:prov:1.51.0.0'
 }
 
 tasks.test {
