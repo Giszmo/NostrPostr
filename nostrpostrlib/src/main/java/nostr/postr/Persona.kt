@@ -25,13 +25,7 @@ class Persona(
     var petName: String? = null
     val follows: Array<ByteArray>? = null
 
-    fun sign(event: Event): Event {
-        val eventId = event.generateId()
-        val sig = secp256k1.sign(eventId, privateKey!!)
-        return Event(eventId, publicKey!!, event.createdAt, event.kind, event.tags, event.content, sig).getRefinedEvent()
-    }
-
-    companion object {
-        private val secp256k1 = Secp256k1.get()
+    override fun toString(): String {
+        return "Persona(privateKey=${privateKey?.toHex()}, publicKey=${publicKey?.toHex()}, petName=$petName, follows=${follows?.contentToString()})"
     }
 }

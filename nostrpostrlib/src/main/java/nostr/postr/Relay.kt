@@ -99,7 +99,6 @@ class Relay(
         /**
          * A new message was received
          */
-
         fun onEvent(relay: Relay, event: Event)
 
         fun onError(relay: Relay, error: Error)

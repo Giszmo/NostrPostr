@@ -3,34 +3,21 @@ package nostr.postr.events
 import com.google.gson.*
 import com.google.gson.annotations.SerializedName
 import fr.acinq.secp256k1.Secp256k1
-import nostr.postr.*
+import nostr.postr.toHex
 import org.spongycastle.util.encoders.Hex
 import java.lang.reflect.Type
 import java.security.MessageDigest
 
 open class Event(
-    var id: ByteArray,
+    val id: ByteArray,
     @SerializedName("pubkey") val pubKey: ByteArray,
     @SerializedName("created_at") val createdAt: Long,
     val kind: Int,
     val tags: List<List<String>>,
     val content: String,
-    var sig: ByteArray?
+    val sig: ByteArray
 ) {
     fun toJson(): String = gson.toJson(this)
-
-    internal fun generateId(): ByteArray {
-        val rawEvent = listOf(
-            0,
-            pubKey.toHex(),
-            createdAt,
-            kind,
-            tags,
-            content
-        )
-        val rawEventJson = gson.toJson(rawEvent)
-        return sha256.digest(rawEventJson.toByteArray())
-    }
 
     /**
      * Checks if the ID is correct and then if the pubKey's secret key signed the event.
@@ -44,7 +31,7 @@ open class Event(
                    |  Generated: ${generateId().toHex()}""".trimIndent()
             )
         }
-        secp256k1.verifySchnorr(sig!!, id, pubKey)
+        secp256k1.verifySchnorr(sig, id, pubKey)
     }
 
     class EventDeserializer : JsonDeserializer<Event> {
@@ -89,7 +76,7 @@ open class Event(
                     }
                 })
                 addProperty("content", src.content)
-                addProperty("sig", src.sig!!.toHex())
+                addProperty("sig", src.sig.toHex())
             }
         }
     }
@@ -133,10 +120,30 @@ open class Event(
             else -> this
         }
 
-        fun Event.sign(privateKey: ByteArray) {
-            check(pubKey.contentEquals(secp256k1.pubKeyCompress(secp256k1.pubkeyCreate(privateKey)).copyOfRange(1, 33)))
-            id = generateId()
-            sig = secp256k1.signSchnorr(id, privateKey, null)
+        fun generateId(pubKey: ByteArray, createdAt: Long, kind: Int, tags: List<List<String>>, content: String): ByteArray {
+            val rawEvent = listOf(
+                0,
+                pubKey.toHex(),
+                createdAt,
+                kind,
+                tags,
+                content
+            )
+            val rawEventJson = gson.toJson(rawEvent)
+            return sha256.digest(rawEventJson.toByteArray())
         }
     }
+}
+
+fun Event.generateId(): ByteArray {
+    val rawEvent = listOf(
+        0,
+        pubKey.toHex(),
+        createdAt,
+        kind,
+        tags,
+        content
+    )
+    val rawEventJson = Event.gson.toJson(rawEvent)
+    return Event.sha256.digest(rawEventJson.toByteArray())
 }
