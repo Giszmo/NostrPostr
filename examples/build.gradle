@@ -1,5 +1,14 @@
-apply plugin: 'java'
-apply plugin: 'kotlin'
+plugins {
+    id 'java'
+    id 'kotlin'
+    id 'org.openjfx.javafxplugin' version '0.0.8'
+    id 'application'
+}
+
+javafx {
+    version = "11.0.2"
+    modules = ['javafx.controls', 'javafx.graphics']
+}
 
 java {
     sourceCompatibility = JavaVersion.VERSION_11
@@ -14,6 +23,9 @@ dependencies {
     implementation 'org.junit.jupiter:junit-jupiter:5.8.2'
     implementation 'com.madgag.spongycastle:core:1.51.0.0'
     implementation 'com.madgag.spongycastle:prov:1.51.0.0'
+    implementation "no.tornado:tornadofx:1.7.20"
+//    implementation "org.openjfx:javafx:19-ea+8"
+    implementation "org.openjfx:javafx-controls:19-ea+8"
 }
 
 tasks.test {
