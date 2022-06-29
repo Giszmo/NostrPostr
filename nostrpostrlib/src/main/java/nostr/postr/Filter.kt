@@ -63,12 +63,6 @@ class Filter(
 
         fun fromJson(json: String): Filter {
             val jsonFilter = gson.fromJson(json, JsonObject::class.java)
-            val tags = jsonFilter
-                .entrySet()
-                .filter { it.key.startsWith("#") }
-                .associate {
-                    it.key to it.value.asJsonArray.map { it.asString }
-                }
             return Filter(
                 events = if (jsonFilter.has("events")) jsonFilter.getAsJsonArray("events").map { it.asString } else null,
                 authors = if (jsonFilter.has("authors")) jsonFilter.getAsJsonArray("authors").map { it.asString } else null,
