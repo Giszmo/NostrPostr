@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Javalin realtime collaboration</title>
+    </head>
+    <body>
+        <h1>Open the URL in another tab to start collaborating</h1>
+        <textarea id="input" placeholder="Type something ..."></textarea>
+        <textarea id="output"></textarea>
+        <script>
+            window.onload = setupWebSocket;
+            window.onhashchange = setupWebSocket;
+
+            if (!window.location.hash) {
+                const newDocumentId = Date.now().toString(36); // this should be more random
+                window.history.pushState(null, null, "#" + newDocumentId);
+            }
+
+            function setupWebSocket() {
+                const input = document.getElementById("input");
+                const output = document.getElementById("output");
+                const ws = new WebSocket(`ws://localhost:7070/ws`);
+                input.onkeyup = () => {output.value = "";ws.send(input.value)};
+                ws.onmessage = msg => {
+                    output.value = output.value + msg.data + "\n";
+                };
+                ws.onclose = setupWebSocket; // should reconnect if connection is closed
+            }
+        </script>
+        <style>
+            * {
+                box-sizing: border-box;
+                font-family: Georgia, serif;
+                color: rgba(0, 0, 0, 0.75);
+            }
+
+            html {
+                background: #f5f5f5;
+            }
+
+            body {
+                margin: 0 auto;
+            }
+
+            h1 {
+                font-size: 24px;
+                font-weight: 400;
+                margin: 30px 0;
+                text-align: center;
+            }
+
+            textarea {
+                box-shadow: 0 1px 3px 1px rgba(0, 0, 0, 0.2);
+                width: 100%;
+                border: 0;
+                min-height: 40vh;
+                outline: 0;
+                padding: 20px;
+                font-size: 18px;
+                resize: none;
+            }
+        </style>
+    </body>
+</html>

@@ -1,0 +1,16 @@
+plugins {
+    id 'java'
+    id 'kotlin'
+}
+
+dependencies {
+    implementation project(path: ':nostrpostrlib')
+    implementation 'io.javalin:javalin:4.6.3'
+    implementation 'org.slf4j:slf4j-simple:1.7.36'
+    implementation 'com.squareup.retrofit2:converter-gson:2.8.1'
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+}
