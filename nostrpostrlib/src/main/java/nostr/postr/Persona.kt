@@ -1,31 +1,34 @@
 package nostr.postr
 
-import fr.acinq.secp256k1.Secp256k1
-import nostr.postr.events.Event
-import nostr.postr.events.Event.Companion.getRefinedEvent
-
 class Persona(
-    var privateKey: ByteArray? = null,
-    var publicKey: ByteArray? = null
+    privateKey: ByteArray? = null,
+    publicKey: ByteArray? = null
 ) {
+    val privateKey: ByteArray?
+    val publicKey: ByteArray
+    var petName: String? = null
+    val follows: Array<ByteArray>? = null
 
     init {
         if (privateKey == null) {
             if (publicKey == null) {
-                privateKey = Utils.privkeyCreate()
-                publicKey = Utils.pubkeyCreate(privateKey!!)
+                // create new, random keys
+                this.privateKey = Utils.privkeyCreate()
+                this.publicKey = Utils.pubkeyCreate(this.privateKey)
             } else {
-                check(publicKey!!.size == 32)
+                // this is a read-only account
+                check(publicKey.size == 32)
+                this.privateKey = null
+                this.publicKey = publicKey
             }
         } else {
-            publicKey = Utils.pubkeyCreate(privateKey!!)
+            // as private key is provided, ignore the public key and set keys according to private key
+            this.privateKey = privateKey
+            this.publicKey = Utils.pubkeyCreate(privateKey)
         }
     }
 
-    var petName: String? = null
-    val follows: Array<ByteArray>? = null
-
     override fun toString(): String {
-        return "Persona(privateKey=${privateKey?.toHex()}, publicKey=${publicKey?.toHex()}, petName=$petName, follows=${follows?.contentToString()})"
+        return "Persona(privateKey=${privateKey?.toHex()}, publicKey=${publicKey.toHex()}, petName=$petName, follows=${follows?.contentToString()})"
     }
 }

@@ -63,21 +63,23 @@ class Filter(
 
         fun fromJson(json: String): Filter {
             val jsonFilter = gson.fromJson(json, JsonObject::class.java)
-            return Filter(
-                events = if (jsonFilter.has("events")) jsonFilter.getAsJsonArray("events").map { it.asString } else null,
-                authors = if (jsonFilter.has("authors")) jsonFilter.getAsJsonArray("authors").map { it.asString } else null,
-                kinds = if (jsonFilter.has("kinds")) jsonFilter.getAsJsonArray("kinds").map { it.asInt } else null,
-                tags = jsonFilter
-                    .entrySet()
-                    .filter { it.key.startsWith("#") }
-                    .associate {
-                        it.key.substring(1) to it.value.asJsonArray.map { it.asString }
-                    }
-                    .ifEmpty { null },
-                since = if (jsonFilter.has("since")) Date(jsonFilter.get("since").asLong) else null,
-                until = if (jsonFilter.has("until")) Date(jsonFilter.get("until").asLong) else null,
-                limit = if (jsonFilter.has("limit")) jsonFilter.get("limit").asInt else null
-            )
+            return fromJson(jsonFilter)
         }
+
+        fun fromJson(json: JsonObject) = Filter(
+            events = if (json.has("events")) json.getAsJsonArray("events").map { it.asString } else null,
+            authors = if (json.has("authors")) json.getAsJsonArray("authors").map { it.asString } else null,
+            kinds = if (json.has("kinds")) json.getAsJsonArray("kinds").map { it.asInt } else null,
+            tags = json
+                .entrySet()
+                .filter { it.key.startsWith("#") }
+                .associate {
+                    it.key.substring(1) to it.value.asJsonArray.map { it.asString }
+                }
+                .ifEmpty { null },
+            since = if (json.has("since")) Date(json.get("since").asLong) else null,
+            until = if (json.has("until")) Date(json.get("until").asLong) else null,
+            limit = if (json.has("limit")) json.get("limit").asInt else null
+        )
     }
 }
