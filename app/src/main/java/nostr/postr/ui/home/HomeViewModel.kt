@@ -3,11 +3,30 @@ package nostr.postr.ui.home
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import fr.acinq.secp256k1.Hex
+import nostr.postr.Persona
+import nostr.postr.Utils
 
 class HomeViewModel : ViewModel() {
-
-    private val _text = MutableLiveData<String>().apply {
-        value = "This is home Fragment"
+    private val _personas: MutableLiveData<MutableList<Persona>> by lazy {
+        MutableLiveData<MutableList<Persona>>().also {
+            it.value = mutableListOf(
+                Persona(privateKey = Hex.decode("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")).apply { petName = "Alice" },
+                Persona(privateKey = Hex.decode("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb")).apply { petName = "Bob" },
+                Persona(privateKey = Hex.decode("cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc")).apply { petName = "Carol" },
+                Persona(publicKey = Utils.pubkeyCreate(Hex.decode("dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"))).apply { petName = "Dave" }
+            )
+            loadPersonas()
+        }
     }
-    val text: LiveData<String> = _text
+    val personas: LiveData<MutableList<Persona>> = _personas
+
+    private fun loadPersonas() {
+//        _personas.value..postValue(mutableListOf(
+//            Persona(privateKey = Hex.decode("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")).apply { petName = "Alice" },
+//            Persona(privateKey = Hex.decode("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb")).apply { petName = "Bob" },
+//            Persona(privateKey = Hex.decode("cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc")).apply { petName = "Carol" },
+//            Persona(publicKey = Utils.pubkeyCreate(Hex.decode("dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"))).apply { petName = "Dave" }
+//        ))
+    }
 }

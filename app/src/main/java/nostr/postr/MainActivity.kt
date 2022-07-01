@@ -10,6 +10,7 @@ import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import nostr.postr.databinding.ActivityMainBinding
 import nostr.postr.events.*
+import java.util.*
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
@@ -45,7 +46,10 @@ class MainActivity : AppCompatActivity() {
 
         Client.subscribe(clientListener)
         Client.lenient = true
-        Client.connect()
+        val filter = Filter(
+            since = Date(1652305000)
+        )
+        Client.connect(mutableListOf(filter))
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
