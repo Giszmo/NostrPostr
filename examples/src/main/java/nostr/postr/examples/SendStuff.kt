@@ -14,7 +14,7 @@ class SendStuff {
 
         private val listener = object: Client.Listener() {
             override fun onNewEvent(event: Event) {
-                if (event.pubKey.toHex() == persona.publicKey!!.toHex()) {
+                if (event.pubKey.toHex() == persona.publicKey.toHex()) {
                     logDetail(event, event.toJson())
                     stop()
                 } else {
@@ -25,10 +25,10 @@ class SendStuff {
 
         @JvmStatic
         fun main(vararg args: String) {
-            println("""Persona(privKey:${persona.privateKey!!.toHex()}, pubKey:${persona.publicKey!!.toHex()})""")
+            println("""Persona(privKey:${persona.privateKey!!.toHex()}, pubKey:${persona.publicKey.toHex()})""")
             Client.subscribe(listener)
             Client.connect(mutableListOf(Filter(
-                authors = listOf(persona.publicKey!!.toHex()))))
+                authors = listOf(persona.publicKey.toHex()))))
 
 //            val metaData = ContactMetaData("NostrPostr Testr", "http://www.makolkin.ru/Gallery/120930/Moon_120930_TAL-250K_IR_VAC136_dvmak001.jpg", "Just an account to play with NOSTR", null)
 //            val event = MetadataEvent.create(metaData, persona.privateKey!!)

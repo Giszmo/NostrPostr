@@ -6,10 +6,8 @@ import org.junit.jupiter.api.Test
 import org.spongycastle.util.encoders.Hex
 
 internal class UtilsTest {
-    val alice = Persona(
-        Hex.decode("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"))
-    val bob = Persona(
-        Hex.decode("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"))
+    val alice = Persona(Hex.decode("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"))
+    val bob = Persona(Hex.decode("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"))
 
     @Test
     fun privkeyCreate() {
@@ -26,15 +24,15 @@ internal class UtilsTest {
     @Test
     fun encryptDecrypt() {
         val msg = "Hello World!"
-        val msgEncrypted = Utils.encrypt(msg, alice.privateKey!!, bob.publicKey!!)
-        val msgDecrypted = Utils.decrypt(msgEncrypted, bob.privateKey!!, alice.publicKey!!)
+        val msgEncrypted = Utils.encrypt(msg, alice.privateKey!!, bob.publicKey)
+        val msgDecrypted = Utils.decrypt(msgEncrypted, bob.privateKey!!, alice.publicKey)
         assertEquals(msg, msgDecrypted)
     }
 
     @Test
     fun getSharedSecret() {
-        val sharedSecretAliceToBob = Utils.getSharedSecret(alice.privateKey!!, bob.publicKey!!)
-        val sharedSecretBobToAlice = Utils.getSharedSecret(bob.privateKey!!, alice.publicKey!!)
+        val sharedSecretAliceToBob = Utils.getSharedSecret(alice.privateKey!!, bob.publicKey)
+        val sharedSecretBobToAlice = Utils.getSharedSecret(bob.privateKey!!, alice.publicKey)
         assertEquals("1d3e7279da3f845c4246087cdd3dd42bea3dea7245ceaf75609d8eb0a4e89c4e", sharedSecretAliceToBob.toHex())
         assertEquals("1d3e7279da3f845c4246087cdd3dd42bea3dea7245ceaf75609d8eb0a4e89c4e", sharedSecretBobToAlice.toHex())
     }

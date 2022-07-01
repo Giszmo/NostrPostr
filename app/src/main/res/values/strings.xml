@@ -6,4 +6,5 @@
     <string name="title_messages">Messages</string>
     <string name="title_search">Search</string>
     <string name="title_post">Post</string>
+    <string name="has_private_key">has private key</string>
 </resources>
