@@ -1,8 +1,53 @@
 # NostrPostr - A nostr client and library for Android
 
-**THIS IS NOT PRODUCTION READY! THIS IS ONLY PUBLICLY AVAILABLE TO GET COLLABORATORS TO HELP TO GET A
-PRODUCTION READY PRODUCT EVENTUALLY! AS OF WRITING THESE LINES, THIS CODE IS A DEMO APP THAT DOES
-NOT SHOW ANYTHING TO THE USER. DEVELOPERS CAN SEE IT IS DOWNLOADING ONE NOSTR ACCOUNT'S EVENTS.**
+
+# Overview
+
+This repository consists of multiple modules that will eventually be split into their own
+repositories but as long as the basic libraries and tools are in very active development, juggling
+multiple repositories isn't worth it yet.
+
+The components are:
+
+## Nostr Library in Kotlin - nostrpostrlib
+
+This is the core all other modules build upon. It provides facilities to connect to nostr relays,
+to send and receive events.
+
+## Examples
+
+Here you can find some simple use cases of the library.
+
+## App
+
+Here are the first efforts of developing a full Nostr Social client for Android.
+
+Components to be developed:
+
+- [ ] Profile Editor
+- [ ] Profile Picker
+- [x] Send and Receive Events
+- [ ] Feed
+- [ ] Notifications
+- [ ] Chat
+- [ ] Cache data to local DB
+
+## NostrRelay (branch relay)
+
+This might eventually be a full relay implementation.
+
+Components to be developed:
+
+- [x] Provide Websocket
+- [x] Receive and Manage Event Filters
+- [x] Send matching events and "EOSE"
+- [x] Receive Events (stored in memory)
+- [x] Send Events according to filters
+- [x] Persist Events in DB
+- [ ] Query Events from DB
+
+
+# History
 
 As of the date of creation of this repository there was no Android nostr client. There was no nostr
 library for Android neither. The goal is to provide both with a focus on a clean and generally

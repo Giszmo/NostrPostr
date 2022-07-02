@@ -5,6 +5,7 @@ import com.google.gson.annotations.SerializedName
 import fr.acinq.secp256k1.Secp256k1
 import nostr.postr.toHex
 import org.spongycastle.util.encoders.Hex
+import java.lang.Exception
 import java.lang.reflect.Type
 import java.security.MessageDigest
 
@@ -24,14 +25,18 @@ open class Event(
      */
     fun checkSignature() {
         if (!id.contentEquals(generateId())) {
-            throw Error(
+            throw Exception(
                 """|Unexpected ID.
                    |  Event: ${toJson()}
                    |  Actual ID: ${id.toHex()}
                    |  Generated: ${generateId().toHex()}""".trimIndent()
             )
         }
-        secp256k1.verifySchnorr(sig, id, pubKey)
+        if (!secp256k1.verifySchnorr(sig, id, pubKey)) {
+            throw Exception(
+                """Bad signature!"""
+            )
+        }
     }
 
     class EventDeserializer : JsonDeserializer<Event> {
