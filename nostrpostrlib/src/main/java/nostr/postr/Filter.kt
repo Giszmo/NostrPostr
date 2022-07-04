@@ -10,7 +10,7 @@ import java.util.*
  * Filters define what clients request from relays. They are defined in nip 1 and 12.
  */
 class Filter(
-    val events: List<String>? = null,
+    val ids: List<String>? = null,
     val authors: List<String>? = null,
     val kinds: List<Int>? = null,
     val tags: Map<String, List<String>>? = null,
@@ -20,8 +20,8 @@ class Filter(
 ) {
     fun toJson(): String {
         val jsonObject = JsonObject()
-        events?.run {
-            jsonObject.add("ids", JsonArray().apply { events.forEach { add(it) } })
+        ids?.run {
+            jsonObject.add("ids", JsonArray().apply { ids.forEach { add(it) } })
         }
         authors?.run {
             jsonObject.add("authors", JsonArray().apply { authors.forEach { add(it) } })
@@ -47,7 +47,7 @@ class Filter(
     }
 
     fun match(event: Event): Boolean {
-        if (events?.any { event.id.toHex() == it } == false) return false
+        if (ids?.any { event.id.toHex() == it } == false) return false
         if (kinds?.any { event.kind == it } == false) return false
         if (authors?.any { event.pubKey.toHex() == it } == false) return false
         tags?.forEach { tag ->
@@ -65,21 +65,25 @@ class Filter(
             val jsonFilter = gson.fromJson(json, JsonObject::class.java)
             return fromJson(jsonFilter)
         }
-
-        fun fromJson(json: JsonObject) = Filter(
-            events = if (json.has("events")) json.getAsJsonArray("events").map { it.asString } else null,
-            authors = if (json.has("authors")) json.getAsJsonArray("authors").map { it.asString } else null,
-            kinds = if (json.has("kinds")) json.getAsJsonArray("kinds").map { it.asInt } else null,
-            tags = json
-                .entrySet()
-                .filter { it.key.startsWith("#") }
-                .associate {
-                    it.key.substring(1) to it.value.asJsonArray.map { it.asString }
-                }
-                .ifEmpty { null },
-            since = if (json.has("since")) Date(json.get("since").asLong) else null,
-            until = if (json.has("until")) Date(json.get("until").asLong) else null,
-            limit = if (json.has("limit")) json.get("limit").asInt else null
-        )
+        val declaredFields = Filter::class.java.declaredFields.map { it.name }
+        fun fromJson(json: JsonObject): Filter {
+            // sanity check
+            check(json.keySet().all { it.startsWith("#") || it in declaredFields })
+            return Filter(
+                ids = if (json.has("ids")) json.getAsJsonArray("ids").map { it.asString } else null,
+                authors = if (json.has("authors")) json.getAsJsonArray("authors").map { it.asString } else null,
+                kinds = if (json.has("kinds")) json.getAsJsonArray("kinds").map { it.asInt } else null,
+                tags = json
+                    .entrySet()
+                    .filter { it.key.startsWith("#") }
+                    .associate {
+                        it.key.substring(1) to it.value.asJsonArray.map { it.asString }
+                    }
+                    .ifEmpty { null },
+                since = if (json.has("since")) Date(json.get("since").asLong) else null,
+                until = if (json.has("until")) Date(json.get("until").asLong) else null,
+                limit = if (json.has("limit")) json.get("limit").asInt else null
+            )
+        }
     }
 }

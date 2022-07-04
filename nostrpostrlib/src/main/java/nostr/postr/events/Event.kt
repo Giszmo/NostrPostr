@@ -33,9 +33,7 @@ open class Event(
             )
         }
         if (!secp256k1.verifySchnorr(sig, id, pubKey)) {
-            throw Exception(
-                """Bad signature!"""
-            )
+            throw Exception("""Bad signature!""")
         }
     }
 

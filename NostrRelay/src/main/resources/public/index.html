@@ -2,28 +2,49 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8">
-        <title>Javalin realtime collaboration</title>
+        <title>Javalin Relay</title>
     </head>
     <body>
-        <h1>Open the URL in another tab to start collaborating</h1>
-        <textarea id="input" placeholder="Type something ..."></textarea>
-        <textarea id="output"></textarea>
+        <h1>Type queries or events to see what the relay replies</h1>
+        <textarea id="relay" placeholder="Relay" style="min-height: 1em;">ws://localhost:7070/ws</textarea>
+        <textarea id="input" placeholder="Queries or events" style="min-height: 6em;">[
+    "REQ",
+    "arbitrary channel name",
+    {"limit":5},
+    {"limit":7,"#p":["887645fef0ce0c3c1218d2f5d8e6132a19304cdc57cd20281d082f38cfea0072"],"kinds":[1]}
+] </textarea>
+        <textarea id="output" wrap="off" style="min-height: 20em;"></textarea>
         <script>
             window.onload = setupWebSocket;
             window.onhashchange = setupWebSocket;
+            window.received = []
+            const relay = document.getElementById("relay");
+            relay.onkeyup = setupWebSocket
+            const input = document.getElementById("input");
+            input.onkeyup = sendInput
+            const output = document.getElementById("output");
+            var ws
 
-            if (!window.location.hash) {
-                const newDocumentId = Date.now().toString(36); // this should be more random
-                window.history.pushState(null, null, "#" + newDocumentId);
+            function sendInput() {
+                output.value = ""
+                window.received = []
+                ws.send(input.value)
             }
 
             function setupWebSocket() {
-                const input = document.getElementById("input");
-                const output = document.getElementById("output");
-                const ws = new WebSocket(`ws://localhost:7070/ws`);
-                input.onkeyup = () => {output.value = "";ws.send(input.value)};
+                ws = new WebSocket(relay.value);
                 ws.onmessage = msg => {
-                    output.value = output.value + msg.data + "\n";
+                    console.log(msg.data)
+                    window.received.push(msg.data)
+                    const l = window.received.length
+                    var msgs = ""
+                    for (var i=10; i>0; i--) {
+                        if (l >= i) {
+                            msgs += window.received[l-i] + "\n"
+                        }
+                    }
+                    output.value = `Received ${l} events. Last ones:
+${msgs}`
                 };
                 ws.onclose = setupWebSocket; // should reconnect if connection is closed
             }
@@ -54,7 +75,6 @@
                 box-shadow: 0 1px 3px 1px rgba(0, 0, 0, 0.2);
                 width: 100%;
                 border: 0;
-                min-height: 40vh;
                 outline: 0;
                 padding: 20px;
                 font-size: 18px;

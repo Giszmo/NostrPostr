@@ -1,83 +1,76 @@
 package nostr.relay
 
+import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonArray
 import com.google.gson.JsonSyntaxException
 import io.javalin.Javalin
 import io.javalin.http.staticfiles.Location
 import io.javalin.websocket.WsContext
+import nostr.postr.Client
 import nostr.postr.Filter
 import nostr.postr.events.Event
-import nostr.postr.events.MetadataEvent
 import nostr.postr.toHex
-import nostr.relay.Events2Events.references
-import org.eclipse.jetty.util.Loader.getResource
+import nostr.relay.Events.createdAt
+import nostr.relay.Events.hash
+import nostr.relay.Events.kind
+import nostr.relay.Events.pubKey
+import nostr.relay.Events.raw
+import org.jetbrains.exposed.dao.Entity
+import org.jetbrains.exposed.dao.EntityClass
+import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
-import java.lang.Exception
 import java.sql.Connection
 
-val gson = GsonBuilder().create()
-val events = mutableListOf<Event>()
+val gson: Gson = GsonBuilder().create()
 
-object Events : Table() {
-    val id = char("id", 64)
-    val pubKey = char("pubKey", 64) references Personas.pubKey
+object Events: IntIdTable() {
+    val hash = char("hash", 64).index()
+    val pubKey = char("pubKey", 64)
     val kind = integer("kind")
     val raw = text("raw")
-
-    override val primaryKey = PrimaryKey(id)
+    val createdAt = long("createdAt")
+    val hidden = bool("hidden").default(false)
+    val firstSeen = long("firstSeen").default(System.currentTimeMillis())
 }
 
-object Personas: Table() {
-    val pubKey = char("id", 64)
-    val event = char("event", length = 64) references Events.id
-    val name = varchar("name", length = 128)
-    val picture = varchar("picture", length = 256).nullable()
-    val about = text("about")
-    val nip05 = varchar("nip05", length = 256).nullable()
+class DbEvent(id: EntityID<Int>): Entity<Int>(id) {
+    companion object: EntityClass<Int, DbEvent>(Events)
 
-    override val primaryKey = PrimaryKey(pubKey)
+    var hash by Events.hash
+    var publicKey by pubKey
+    var kind by Events.kind
+    var raw by Events.raw
+    var createdAt by Events.createdAt
+    var hidden by Events.hidden
+    var firstSeen by Events.firstSeen
 }
 
-object Follows: Table() {
-    val from = char("from", 64).index() references Personas.pubKey
-    val to = char("to", 64) references Personas.pubKey
-
-    override val primaryKey = PrimaryKey(from, to)
+object Tags : IntIdTable() {
+    val event = integer("event_id").references(Events.id)
+    val key = varchar("key", length = 20).index()
+    val value = text("value").index()
 }
 
-object Events2Events: Table() {
-    val from = char("from", 64).index() references Events.id
-    val to = char("to", 64) references Events.id
-    val type = integer("type") // if "from" references multiple "to"s, the index is stored here.
+class DbTag(id: EntityID<Int>): Entity<Int>(id) {
+     companion object: EntityClass<Int, DbTag>(Tags)
 
-    override val primaryKey = PrimaryKey(from, to)
-}
-
-object Events2Personas: Table() {
-    val from = char("from", 64).index() references Events.id
-    val to = char("to", 64) references Personas.pubKey
-
-    override val primaryKey = PrimaryKey(from, to)
-}
-
-object Tags: Table() {
-    val event = char("event_id", 64) references Events.id
+    var event by Tags.event
+    var key by Tags.key
+    var value by Tags.value
 }
 
 fun main() {
     Database.connect("jdbc:sqlite:events.db", "org.sqlite.JDBC")
     TransactionManager.manager.defaultIsolationLevel =
         Connection.TRANSACTION_SERIALIZABLE
-        // or Connection.TRANSACTION_READ_UNCOMMITTED
+    // or Connection.TRANSACTION_READ_UNCOMMITTED
     transaction {
         addLogger(StdOutSqlLogger)
-        SchemaUtils.create(Events)
-        events.addAll(
-            Events.selectAll().map { Event.fromJson(it[Events.raw]) }
-        )
+        SchemaUtils.createMissingTablesAndColumns(Events, Tags)
     }
     val subscribers = mutableMapOf<WsContext, MutableMap<String, List<Filter>>>()
     Javalin.create {
@@ -86,6 +79,7 @@ fun main() {
         ws("/ws") { ws ->
             ws.onConnect { ctx ->
                 subscribers[ctx] = subscribers[ctx] ?: mutableMapOf()
+                ctx.send("""["NOTICE","Greetings stranger! This relay runs NostrPostr version 0.8. Please report bugs to https://github.com/Giszmo/NostrPostr"]""")
             }
             ws.onMessage { ctx ->
                 val msg = ctx.message()
@@ -96,33 +90,36 @@ fun main() {
                             val channel = jsonArray[1].asString
                             val filters = jsonArray
                                 .filterIndexed { index, _ -> index > 1 }
-                                .map {
-                                    Filter.fromJson(it.asJsonObject)
+                                .mapIndexed { index, it ->
+                                    try {
+                                        Filter.fromJson(it.asJsonObject)
+                                    } catch (e: Exception) {
+                                        ctx.send("""["NOTICE","Something went wrong with filter $index. Ignoring request."]""")
+                                        println("Something went wrong with filter $index. Ignoring request.\n${it}")
+                                        return@onMessage
+                                    }
                                 }
                             subscribers[ctx]!![channel] = filters
-                            events
-                                .filter { ev -> filters.any {
-                                    it.match(ev) } }
-                                .forEach { ctx.send("""["EVENT","$channel",${it.toJson()}]""") }
+                            sendEvents(channel, filters, ctx)
                             ctx.send("""["EOSE","$channel"]""")
                         }
                         "EVENT" -> {
                             val event = Event.fromJson(jsonArray[1])
-                            if (events.any { it.id.toHex() == event.id.toHex() }) {
-                                ctx.send("""["NOTICE","Already had eventId ${event.id.toHex()}"]""")
-                                return@onMessage
-                            }
                             val rawEvent = event.toJson()
-                            addEvent(event, rawEvent)
-                            subscribers
-                                .filter { it.key.sessionId != ctx.sessionId }
-                                .forEach { (wsContext, channelFilters) ->
-                                    channelFilters.forEach { (channel, filters) ->
-                                        if (filters.any { it.match(event) }) {
-                                            wsContext.send("""["EVENT","$channel",$rawEvent]""")
+                            if (event.kind in 20_000..29_999 // ephemeral events get sent and forgotten
+                                || addEvent(event, rawEvent)) { // non-ephemeral events get sent and stored
+                                subscribers
+                                    .filter { it.key.sessionId != ctx.sessionId }
+                                    .forEach { (wsContext, channelFilters) ->
+                                        channelFilters.forEach { (channel, filters) ->
+                                            if (filters.any { it.match(event) }) {
+                                                wsContext.send("""["EVENT","$channel",$rawEvent]""")
+                                            }
                                         }
                                     }
-                                }
+                            } else {
+                                ctx.send("""["NOTICE","Something went wrong with event ${event.id.toHex()}"]""")
+                            }
                         }
                         "CLOSE" -> {
                             val channel = jsonArray[1].asString
@@ -131,7 +128,7 @@ fun main() {
                         }
                         else -> ctx.send("""["NOTICE","Could not handle $cmd"]""")
                     }
-                } catch(e: JsonSyntaxException) {
+                } catch (e: JsonSyntaxException) {
                     ctx.send("""["NOTICE","No valid JSON: ${gson.toJson(msg)}"]""")
                 }
             }
@@ -140,23 +137,72 @@ fun main() {
             }
         }
     }.start(7070)
+    // get 100 random and all future Events from other relays
+    Client.subscribe(object : Client.Listener() {
+        override fun onNewEvent(event: Event) {
+            addEvent(event, event.toJson())
+        }
+    })
+    Client.connect(mutableListOf(Filter(limit = 100)))
 }
 
-fun addEvent(event: Event, eventJson: String? = null) {
+fun sendEvents(channel: String, filters: List<Filter>, ctx: WsContext) {
+    val rawEvents = mutableSetOf<String>()
     transaction {
-        try {
-            event.checkSignature()
-            Events.insert {
-                it[id] = event.id.toHex()
-                it[raw] = eventJson ?: event.toJson()
-                it[kind] = event.kind
-                it[pubKey] = event.pubKey.toHex()
+        filters.forEach { filter ->
+            val query = Events.select { Events.hidden eq false }.orderBy(createdAt to SortOrder.DESC)
+            filter.ids?.let { query.andWhere { hash inList it } }
+            filter.kinds?.let { query.andWhere { kind inList it } }
+            filter.authors?.let { query.andWhere { pubKey inList it } }
+            filter.since?.let { query.andWhere { createdAt greaterEq it } }
+            filter.until?.let { query.andWhere { createdAt lessEq it } }
+            filter.tags?.let {
+                query.adjustColumnSet { innerJoin(Tags, { Events.id }, { event }) }
+                it.forEach { query.andWhere { (Tags.key eq it.key) and (Tags.value inList it.value) } }
             }
-            events.add(0, event)
-        } catch (e: Exception) {
-            println(e.message ?: "Something went wrong.")
+            filter.limit?.let { query.limit(it) }
+            query.forEach { rawEvents.add(it[raw]) }
         }
     }
+    val t = System.currentTimeMillis()
+    rawEvents.forEach {
+        ctx.send("""["EVENT","$channel",$it]""")
+    }
+    println("${rawEvents.size} Events sent in ${System.currentTimeMillis()-t}ms.")
+    ctx.send("""["NOTICE","${rawEvents.size} Events sent in ${System.currentTimeMillis()-t}ms."]""")
 }
 
-val WsContext.docId: String get() = this.pathParam("doc-id")
+fun addEvent(e: Event, eventJson: String): Boolean = transaction {
+    try {
+        e.checkSignature()
+        DbEvent.new {
+            hash = e.id.toHex()
+            raw = eventJson
+            kind = e.kind
+            publicKey = e.pubKey.toHex()
+            createdAt = e.createdAt
+        }
+        if (e.kind == 0 || e.kind in 10_000..19_999) {
+            // set all but "last" to "hidden"
+            DbEvent.find {
+                (pubKey eq e.pubKey.toHex()) and (kind eq e.kind) and (Events.hidden eq false)
+            }.forEach { it.hidden = true }
+            DbEvent.find {
+                (pubKey eq e.pubKey.toHex()) and (kind eq e.kind)
+            }.orderBy(createdAt to SortOrder.DESC).first().hidden = false
+        }
+        e.tags.forEach { list ->
+            if (list.size >= 2) {
+                DbTag.new {
+                    event = DbEvent.find { hash eq e.id.toHex() }.first().id.value
+                    key = list[0]
+                    value = list[1]
+                }
+            }
+        }
+        true
+    } catch (e: Exception) {
+        println(e.message ?: "Something went wrong.")
+        false
+    }
+}
