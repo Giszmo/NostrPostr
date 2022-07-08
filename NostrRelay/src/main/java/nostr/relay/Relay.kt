@@ -87,10 +87,14 @@ fun main() {
                             ctx.send("""["EOSE","$channel"]""")
                         }
                         "EVENT" -> {
-                            val event = Event.fromJson(jsonArray[1].asString)
-                            val rawEvent = event.toJson()
-                            println("WS received kind ${event.kind} event.")
-                            processEvent(event, rawEvent, ctx)
+                            try {
+                                val event = Event.fromJson(jsonArray[1].asString)
+                                val rawEvent = event.toJson()
+                                println("WS received kind ${event.kind} event.")
+                                processEvent(event, rawEvent, ctx)
+                            } catch (e: Exception) {
+                                ctx.send("""["NOTICE","Something went wrong with Event: ${gson.toJson(jsonArray[1])}"]""")
+                            }
                         }
                         "CLOSE" -> {
                             val channel = jsonArray[1].asString
@@ -101,6 +105,9 @@ fun main() {
                     }
                 } catch (e: JsonSyntaxException) {
                     ctx.send("""["NOTICE","No valid JSON: ${gson.toJson(msg)}"]""")
+                } catch (e: Exception) {
+                    ctx.send("""["NOTICE","Exceptions were thrown: ${gson.toJson(msg)}"]""")
+                    println(e.message)
                 }
             }
             ws.onClose { ctx ->
