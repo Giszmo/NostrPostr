@@ -87,7 +87,7 @@ fun main() {
                             ctx.send("""["EOSE","$channel"]""")
                         }
                         "EVENT" -> {
-                            val event = Event.fromJson(jsonArray[1])
+                            val event = Event.fromJson(jsonArray[1].asString)
                             val rawEvent = event.toJson()
                             println("WS received kind ${event.kind} event.")
                             processEvent(event, rawEvent, ctx)
