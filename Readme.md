@@ -32,19 +32,17 @@ Components to be developed:
 - [ ] Chat
 - [ ] Cache data to local DB
 
-## NostrRelay (branch relay)
+## NostrRelay
 
-This might eventually be a full relay implementation.
+This is a full relay implementation. It's not battle tested yet but works fine for the author.
 
-Components to be developed:
-
-- [x] Provide Websocket
-- [x] Receive and Manage Event Filters
-- [x] Send matching events and "EOSE"
-- [x] Receive Events (stored in memory)
-- [x] Send Events according to filters
-- [x] Persist Events in DB
-- [ ] Query Events from DB
+- [x] nip 1
+- [x] nip 2
+- [x] nip 9
+- [x] nip 11
+- [x] nip 12
+- [x] nip 15
+- [x] nip 16
 
 
 # History

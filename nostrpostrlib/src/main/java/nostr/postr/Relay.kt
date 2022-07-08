@@ -3,6 +3,8 @@ package nostr.postr
 import com.google.gson.JsonElement
 import nostr.postr.events.Event
 import okhttp3.*
+import java.util.*
+import kotlin.collections.HashSet
 
 class Relay(
     val url: String,
@@ -19,7 +21,7 @@ class Relay(
 
     fun unregister(listener: Listener) = listeners.remove(listener)
 
-    fun connect() {
+    fun connect(reconnectTs: Long? = null) {
         val request = Request.Builder().url(url).build()
         val listener = object : WebSocketListener() {
             override fun onOpen(webSocket: WebSocket, response: Response) {
@@ -60,6 +62,10 @@ class Relay(
 
             override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
                 listeners.forEach { it.onRelayStateChange(this@Relay, Type.DISCONNECT) }
+                // As a rough guess, we assume we might have missed events during those last 30s ...
+                // TODO: Make sure that queries that have not gotten their EOSE yet, get resent unmodified.
+                val lastGood = System.currentTimeMillis() - 30_000
+                connect(lastGood)
             }
 
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
@@ -69,6 +75,7 @@ class Relay(
             }
         }
         socket = httpClient.newWebSocket(request, listener)
+        sendFilter(reconnectTs)
     }
 
     fun disconnect() {
@@ -76,9 +83,13 @@ class Relay(
         socket.close(1000, "Normal close")
     }
 
-    fun sendFilter() {
-        // TODO: this results in the reception of many message duplicates!
-        val request = """["REQ","main-channel",${Client.filters.joinToString(",") { it.toJson() }}]"""
+    fun sendFilter(reconnectTs: Long? = null) {
+        val filters = if (reconnectTs != null) {
+            Client.filters.map { Filter(it.ids, it.authors, it.kinds, it.tags, since = Date(reconnectTs)) }
+        } else {
+            Client.filters
+        }
+        val request = """["REQ","main",${filters.joinToString(",") { it.toJson() }}]"""
         socket.send(request)
     }
 

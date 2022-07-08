@@ -1,11 +1,16 @@
 plugins {
     id 'java'
     id 'kotlin'
+    id 'application'
 }
+
+apply plugin: 'application'
+mainClassName = 'nostr.relay.RelayKt'
 
 dependencies {
     implementation project(path: ':nostrpostrlib')
     implementation 'io.javalin:javalin:4.6.3'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.3'
     implementation 'org.slf4j:slf4j-simple:1.7.36'
     implementation 'com.squareup.retrofit2:converter-gson:2.8.1'
     implementation "org.jetbrains.exposed:exposed-core:$exposedVersion"
