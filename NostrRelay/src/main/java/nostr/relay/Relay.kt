@@ -158,6 +158,7 @@ private fun sendEvents(channel: String, filters: List<Filter>, ctx: WsContext) {
 }
 
 private fun processEvent(e: Event, eventJson: String, sender: WsMessageContext? = null): Boolean {
+    e.checkSignature()
     // a bit hacky: Make sure to get our clients' events (having a sender) to other relays  ...
     sender?.let { Client.send(e) }
     // ephemeral events get sent and forgotten
