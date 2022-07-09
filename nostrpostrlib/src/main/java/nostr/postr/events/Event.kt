@@ -84,6 +84,14 @@ open class Event(
         }
     }
 
+    class ByteArrayDeserializer : JsonDeserializer<ByteArray> {
+        override fun deserialize(
+            json: JsonElement,
+            typeOfT: Type?,
+            context: JsonDeserializationContext?
+        ): ByteArray = Hex.decode(json.asString)
+    }
+
     class ByteArraySerializer : JsonSerializer<ByteArray> {
         override fun serialize(
             src: ByteArray,
@@ -101,6 +109,7 @@ open class Event(
             .registerTypeAdapter(Event::class.java, EventSerializer())
             .registerTypeAdapter(Event::class.java, EventDeserializer())
             .registerTypeAdapter(ByteArray::class.java, ByteArraySerializer())
+            .registerTypeAdapter(ByteArray::class.java, ByteArrayDeserializer())
             .create()
 
         fun fromJson(json: String, lenient: Boolean = false): Event = gson.fromJson(json, Event::class.java).getRefinedEvent(lenient)
