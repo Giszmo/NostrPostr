@@ -11,29 +11,29 @@ internal class PrivateDmEventTest {
     @Test
     fun roundTrip() {
         val msg = "Hello World!"
-        val alice = Persona(Hex.decode("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"))
-        val bob = Persona(Hex.decode("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"))
+        val alice = Persona(Hex.decode("a".repeat(64)))
+        val bob = Persona(Hex.decode("b".repeat(64)))
+        val carol = Persona(Hex.decode("c".repeat(64)))
         val sharedSecret = Utils.getSharedSecret(alice.privateKey!!, bob.publicKey)
-        val sharedAccountPrivKey = PrivateDmEvent.getSharedAccountPrivKey(sharedSecret, 60000)
-        val sharedAccountPubKey = Utils.pubkeyCreate(sharedAccountPrivKey)
 
-        val replyTo = "70e18ff49f86c96e2c3a99e048d27437935d7c03080aeb7dfceef818995b904a"
-        val event = PrivateDmEvent.create(bob.publicKey, replyTo, msg, alice.privateKey!!)
-        val contentDecrypt = Utils.decrypt(event.content, bob.privateKey!!, alice.publicKey)
+        val event = PrivateDmEvent.create(bob.publicKey, msg, alice.privateKey!!, advertisedRecipientPubKey = carol.publicKey)
+        val contentDecrypt = event.plainContent(alice.publicKey, bob.privateKey!!)
+        val contentDecryptFail = event.plainContent(alice.publicKey, carol.privateKey!!)
         println("""Alice pubkey is ${alice.publicKey.toHex()}
             |Bob pubkey is ${bob.publicKey.toHex()}
+            |Carol pubkey is ${carol.publicKey.toHex()}
             |Shared secret is ${sharedSecret.toHex()}
-            |Shared account privkey is ${sharedAccountPrivKey.toHex()}
-            |Shared account pubkey is ${sharedAccountPubKey.toHex()}
             |The Event as seen by relays is
             |${event.toJson()}
             |
-            |It sends "$msg" from Alice to Bob referencing event $replyTo.
+            |It sends "$msg" from Alice to Bob.
             |
             |The content decrypted using the Alice-Bob shared secret as in kind-4 is
             |$contentDecrypt
+            |
+            |The content decrypted using the Alice-Carol shared secret as in kind-4 is
+            |$contentDecryptFail
         """.trimMargin())
-        val msgDecrypted = event.plainContent(alice.publicKey, bob.privateKey!!)!!.content
-        Assertions.assertEquals(msg, msgDecrypted)
+        Assertions.assertEquals(msg, contentDecrypt)
     }
 }
