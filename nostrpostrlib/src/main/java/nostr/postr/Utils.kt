@@ -71,3 +71,11 @@ object Utils {
 }
 
 fun ByteArray.toHex() = String(Hex.encode(this))
+
+fun Int.toByteArray(): ByteArray {
+    val bytes = ByteArray(4)
+    (0..3).forEach {
+        bytes[3 - it] = ((this ushr (8 * it)) and 0xFFFF).toByte()
+    }
+    return bytes
+}

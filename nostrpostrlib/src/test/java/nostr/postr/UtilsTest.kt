@@ -33,7 +33,8 @@ internal class UtilsTest {
     fun getSharedSecret() {
         val sharedSecretAliceToBob = Utils.getSharedSecret(alice.privateKey!!, bob.publicKey)
         val sharedSecretBobToAlice = Utils.getSharedSecret(bob.privateKey!!, alice.publicKey)
-        assertEquals("1d3e7279da3f845c4246087cdd3dd42bea3dea7245ceaf75609d8eb0a4e89c4e", sharedSecretAliceToBob.toHex())
-        assertEquals("1d3e7279da3f845c4246087cdd3dd42bea3dea7245ceaf75609d8eb0a4e89c4e", sharedSecretBobToAlice.toHex())
+        val sharedSecretExpected = Hex.decode("1d3e7279da3f845c4246087cdd3dd42bea3dea7245ceaf75609d8eb0a4e89c4e")
+        assertArrayEquals(sharedSecretExpected, sharedSecretAliceToBob)
+        assertArrayEquals(sharedSecretExpected, sharedSecretBobToAlice)
     }
 }

@@ -23,7 +23,7 @@ class EventTest {
     @ParameterizedTest @MethodSource("provideAnyKindEvent")
     fun generateId(event: Event) {
         val generatedId = event.generateId()
-        assertEquals(String(Hex.encode(event.id)), String(Hex.encode(generatedId)))
+        assertArrayEquals(event.id, generatedId)
     }
 
     @ParameterizedTest @MethodSource("provideAnyKindEventAll")
