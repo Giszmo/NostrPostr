@@ -21,7 +21,7 @@ class MainActivity : AppCompatActivity() {
                 TextNoteEvent.kind, // 1
                 RecommendRelayEvent.kind, // 2
                 ContactListEvent.kind, // 3
-                EncryptedDmEvent.kind, // 4
+                PrivateDmEvent.kind, // 4
                 DeletionEvent.kind, // 5
                 in listOf(6, 7, 17, 30, 40, 7357) -> Unit
                 else -> Log.d("UNHANDLED_EVENT", event.toJson())

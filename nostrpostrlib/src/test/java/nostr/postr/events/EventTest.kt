@@ -61,13 +61,12 @@ class EventTest {
     }
 
     @ParameterizedTest @MethodSource("provideEncryptedDmEvent")
-    fun checkEncryptedDmEvent(event: Event) {
-        assertTrue(event is EncryptedDmEvent)
+    fun checkPrivateDmEvent(event: Event) {
+        assertTrue(event is PrivateDmEvent)
     }
 
     @ParameterizedTest @MethodSource("provideDeletionEvent")
     fun checkDeletionEvent(event: Event) {
-        // TODO: provide test vectors in event_kind_5.txt
         assertTrue(event is DeletionEvent)
     }
 
@@ -86,7 +85,7 @@ class EventTest {
         @JvmStatic fun provideRecommendRelayEvent() = events(RecommendRelayEvent.kind.toString())
         @JvmStatic fun provideRecommendRelayEventLenient() = eventsJson("2_lenient")
         @JvmStatic fun provideContactListEvent() = events(ContactListEvent.kind.toString())
-        @JvmStatic fun provideEncryptedDmEvent() = events(EncryptedDmEvent.kind.toString())
+        @JvmStatic fun provideEncryptedDmEvent() = events(PrivateDmEvent.kind.toString())
         @JvmStatic fun provideDeletionEvent() = events(DeletionEvent.kind.toString())
 
         @JvmStatic fun provideAnyKindEventAll(): Stream<Event> {

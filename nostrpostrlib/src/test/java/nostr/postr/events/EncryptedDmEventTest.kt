@@ -12,8 +12,8 @@ internal class EncryptedDmEventTest {
         val msg = "Hello World!"
         val alice = Persona(Hex.decode("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"))
         val bob = Persona(Hex.decode("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"))
-        val event = EncryptedDmEvent.create(bob.publicKey, null, msg, alice.privateKey!!)
-        val msgDecrypted = Utils.decrypt(event.content, bob.privateKey!!, alice.publicKey)
+        val event = EncryptedDmEvent.create(bob.pubKey, null, msg, alice.privKey!!)
+        val msgDecrypted = Utils.decrypt(event.content, bob.privKey!!, alice.pubKey)
         assertEquals(msg, msgDecrypted)
     }
 }

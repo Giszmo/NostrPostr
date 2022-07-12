@@ -17,22 +17,22 @@ internal class UtilsTest {
 
     @Test
     fun pubkeyCreate() {
-        val publicKey = Utils.pubkeyCreate(alice.privateKey!!)
+        val publicKey = Utils.pubkeyCreate(alice.privKey!!)
         assertEquals("6a04ab98d9e4774ad806e302dddeb63bea16b5cb5f223ee77478e861bb583eb3", publicKey.toHex())
     }
 
     @Test
     fun encryptDecrypt() {
         val msg = "Hello World!"
-        val msgEncrypted = Utils.encrypt(msg, alice.privateKey!!, bob.publicKey)
-        val msgDecrypted = Utils.decrypt(msgEncrypted, bob.privateKey!!, alice.publicKey)
+        val msgEncrypted = Utils.encrypt(msg, alice.privKey!!, bob.pubKey)
+        val msgDecrypted = Utils.decrypt(msgEncrypted, bob.privKey!!, alice.pubKey)
         assertEquals(msg, msgDecrypted)
     }
 
     @Test
     fun getSharedSecret() {
-        val sharedSecretAliceToBob = Utils.getSharedSecret(alice.privateKey!!, bob.publicKey)
-        val sharedSecretBobToAlice = Utils.getSharedSecret(bob.privateKey!!, alice.publicKey)
+        val sharedSecretAliceToBob = Utils.getSharedSecret(alice.privKey!!, bob.pubKey)
+        val sharedSecretBobToAlice = Utils.getSharedSecret(bob.privKey!!, alice.pubKey)
         val sharedSecretExpected = Hex.decode("1d3e7279da3f845c4246087cdd3dd42bea3dea7245ceaf75609d8eb0a4e89c4e")
         assertArrayEquals(sharedSecretExpected, sharedSecretAliceToBob)
         assertArrayEquals(sharedSecretExpected, sharedSecretBobToAlice)

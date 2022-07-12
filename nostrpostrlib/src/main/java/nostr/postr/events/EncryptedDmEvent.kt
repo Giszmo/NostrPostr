@@ -5,6 +5,7 @@ import nostr.postr.Utils
 import nostr.postr.toHex
 import java.util.*
 
+@Deprecated("Use nip-18 PrivateDmEvent instead.")
 class EncryptedDmEvent(
     id: ByteArray,
     pubKey: ByteArray,

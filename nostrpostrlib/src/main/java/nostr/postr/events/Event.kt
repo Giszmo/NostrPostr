@@ -121,7 +121,7 @@ open class Event(
             TextNoteEvent.kind -> TextNoteEvent(id, pubKey, createdAt, tags, content, sig)
             RecommendRelayEvent.kind -> RecommendRelayEvent(id, pubKey, createdAt, tags, content, sig, lenient)
             ContactListEvent.kind -> ContactListEvent(id, pubKey, createdAt, tags, content, sig)
-            EncryptedDmEvent.kind -> EncryptedDmEvent(id, pubKey, createdAt, tags, content, sig)
+            PrivateDmEvent.kind -> PrivateDmEvent(id, pubKey, createdAt, tags, content, sig)
             DeletionEvent.kind -> DeletionEvent(id, pubKey, createdAt, tags, content, sig)
             6 -> this // content has full event. Resend/Retweet
             7 -> this // no content but e and p tags. Boosts

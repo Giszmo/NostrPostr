@@ -25,6 +25,10 @@ import java.sql.Connection
 import java.util.*
 
 val gson: Gson = GsonBuilder().create()
+
+/**
+ * Per socket there can be multiple channels with multiple filters each.
+ */
 val subscribers = mutableMapOf<WsContext, MutableMap<String, List<Filter>>>()
 val featureList = mapOf(
     "id" to "ws://localhost:7070/",
@@ -88,8 +92,9 @@ fun main() {
                         }
                         "EVENT" -> {
                             try {
-                                val event = Event.fromJson(jsonArray[1].asString)
-                                val rawEvent = event.toJson()
+                                val eventJson = jsonArray[1].asString
+                                val event = Event.fromJson(eventJson)
+                                val rawEvent = eventJson
                                 println("WS received kind ${event.kind} event.")
                                 processEvent(event, rawEvent, ctx)
                             } catch (e: Exception) {

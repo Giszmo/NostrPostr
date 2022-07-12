@@ -1,34 +1,34 @@
 package nostr.postr
 
 class Persona(
-    privateKey: ByteArray? = null,
-    publicKey: ByteArray? = null
+    privKey: ByteArray? = null,
+    pubKey: ByteArray? = null
 ) {
-    val privateKey: ByteArray?
-    val publicKey: ByteArray
+    val privKey: ByteArray?
+    val pubKey: ByteArray
     var petName: String? = null
     val follows: Array<ByteArray>? = null
 
     init {
-        if (privateKey == null) {
-            if (publicKey == null) {
+        if (privKey == null) {
+            if (pubKey == null) {
                 // create new, random keys
-                this.privateKey = Utils.privkeyCreate()
-                this.publicKey = Utils.pubkeyCreate(this.privateKey)
+                this.privKey = Utils.privkeyCreate()
+                this.pubKey = Utils.pubkeyCreate(this.privKey)
             } else {
                 // this is a read-only account
-                check(publicKey.size == 32)
-                this.privateKey = null
-                this.publicKey = publicKey
+                check(pubKey.size == 32)
+                this.privKey = null
+                this.pubKey = pubKey
             }
         } else {
             // as private key is provided, ignore the public key and set keys according to private key
-            this.privateKey = privateKey
-            this.publicKey = Utils.pubkeyCreate(privateKey)
+            this.privKey = privKey
+            this.pubKey = Utils.pubkeyCreate(privKey)
         }
     }
 
     override fun toString(): String {
-        return "Persona(privateKey=${privateKey?.toHex()}, publicKey=${publicKey.toHex()}, petName=$petName, follows=${follows?.contentToString()})"
+        return "Persona(privateKey=${privKey?.toHex()}, publicKey=${pubKey.toHex()}, petName=$petName, follows=${follows?.contentToString()})"
     }
 }
