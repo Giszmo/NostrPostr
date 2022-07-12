@@ -4,6 +4,7 @@ import com.google.gson.GsonBuilder
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import nostr.postr.events.Event
+import java.io.Serializable
 import java.util.*
 
 /**
@@ -17,7 +18,7 @@ class Filter(
     val since: Date? = null,
     val until: Date? = null,
     val limit: Int? = null
-) {
+): Serializable {
     fun toJson(): String {
         val jsonObject = JsonObject()
         ids?.run {

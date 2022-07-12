@@ -10,6 +10,8 @@ dependencies {
     implementation 'com.madgag.spongycastle:prov:1.51.0.0'
     implementation 'fr.acinq.secp256k1:secp256k1-kmp-jvm:0.6.4'
     implementation 'fr.acinq.secp256k1:secp256k1-kmp-jni-jvm:0.6.4'
+    implementation 'com.github.mgunlogson:cuckoofilter4j:1.0.1'
+
     testImplementation "org.junit.jupiter:junit-jupiter:5.8.2"
     testImplementation "org.junit.jupiter:junit-jupiter-params:5.8.2"
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:5.8.2"
