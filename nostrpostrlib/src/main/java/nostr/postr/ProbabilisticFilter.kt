@@ -25,7 +25,7 @@ class ProbabilisticFilter(
     val since: Date? = null,
     val until: Date? = null,
     val limit: Int? = null,
-    falsePositiveRate: Double = 0.000_000_1
+    falsePositiveRate: Double = 1.0 / 10_000_000
 ): Serializable {
     val ids: Boolean
     val authors: Boolean
