@@ -94,5 +94,15 @@ class ProbabilisticFilter(
                 limit = if (json.has("limit")) json.get("limit").asInt else null
             )
         }
+
+        fun fromFilter(filter: Filter) = ProbabilisticFilter(
+            ids = filter.ids,
+            authors = filter.authors,
+            kinds = filter.kinds,
+            tags = filter.tags,
+            since = filter.since,
+            until = filter.until,
+            limit = filter.limit
+        )
     }
 }

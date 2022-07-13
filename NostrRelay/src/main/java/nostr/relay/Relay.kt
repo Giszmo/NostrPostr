@@ -8,11 +8,8 @@ import io.javalin.Javalin
 import io.javalin.http.staticfiles.Location
 import io.javalin.websocket.WsContext
 import io.javalin.websocket.WsMessageContext
-import nostr.postr.Client
-import nostr.postr.Filter
-import nostr.postr.Relay
+import nostr.postr.*
 import nostr.postr.events.Event
-import nostr.postr.toHex
 import nostr.relay.Events.createdAt
 import nostr.relay.Events.hash
 import nostr.relay.Events.kind
@@ -29,7 +26,7 @@ val gson: Gson = GsonBuilder().create()
 /**
  * Per socket there can be multiple channels with multiple filters each.
  */
-val subscribers = mutableMapOf<WsContext, MutableMap<String, List<Filter>>>()
+val subscribers = mutableMapOf<WsContext, MutableMap<String, List<ProbabilisticFilter>>>()
 val featureList = mapOf(
     "id" to "ws://localhost:7070/",
     "name" to "NostrPostrRelay",
@@ -86,7 +83,7 @@ fun main() {
                                         return@onMessage
                                     }
                                 }
-                            subscribers[ctx]!![channel] = filters
+                            subscribers[ctx]!![channel] = filters.map { ProbabilisticFilter.fromFilter(it) }
                             sendEvents(channel, filters, ctx)
                             ctx.send("""["EOSE","$channel"]""")
                         }
