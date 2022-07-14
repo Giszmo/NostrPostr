@@ -30,7 +30,7 @@ class ProbabilisticFilter(
     val ids: Boolean
     val authors: Boolean
     val tags: Boolean
-    private val cuckooFilter: CuckooFilter<String>
+    val cuckooFilter: CuckooFilter<String>
 
     init {
         val stringCount = (ids?.size ?: 0) +

@@ -18,6 +18,9 @@ import nostr.relay.Events.raw
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.io.ByteArrayOutputStream
+import java.io.ObjectOutputStream
+import java.io.Serializable
 import java.sql.Connection
 import java.util.*
 
@@ -38,6 +41,10 @@ val featureList = mapOf(
 )
 
 fun main() {
+    val rt = Runtime.getRuntime()
+    val memTotal = rt.totalMemory() / 1024 / 1024
+    val memBase = memTotal - rt.freeMemory() / 1024 / 1024
+
     Database.connect("jdbc:sqlite:events.db", "org.sqlite.JDBC")
     TransactionManager.manager.defaultIsolationLevel =
         Connection.TRANSACTION_SERIALIZABLE
@@ -63,7 +70,6 @@ fun main() {
         ws("/") { ws ->
             ws.onConnect { ctx ->
                 subscribers[ctx] = subscribers[ctx] ?: mutableMapOf()
-                ctx.send("""["NOTICE","Greetings stranger! This relay runs NostrPostr version 0.8. Please report bugs to https://github.com/Giszmo/NostrPostr"]""")
             }
             ws.onMessage { ctx ->
                 val msg = ctx.message()
@@ -94,13 +100,17 @@ fun main() {
                                 println("WS received kind ${event.kind} event.")
                                 processEvent(event, event.toJson(), ctx)
                             } catch (e: Exception) {
-                                ctx.send("""["NOTICE","Something went wrong with Event: ${gson.toJson(jsonArray[1])}"]""")
+                                println("Something went wrong with Event: ${gson.toJson(jsonArray[1])}")
                             }
                         }
                         "CLOSE" -> {
                             val channel = jsonArray[1].asString
                             subscribers[ctx]!!.remove(channel)
-                            ctx.send("""["NOTICE","Channel $channel closed."]""")
+                            println("Channel $channel close requested.")
+                            if (subscribers[ctx]!!.isEmpty()) {
+                                // Last channel closed. Disconnect.
+                                ctx.closeSession()
+                            }
                         }
                         else -> ctx.send("""["NOTICE","Could not handle $cmd"]""")
                     }
@@ -112,6 +122,7 @@ fun main() {
                 }
             }
             ws.onClose { ctx ->
+                println("Session closing. ${ctx.reason()}")
                 subscribers.remove(ctx)
             }
         }
@@ -129,6 +140,13 @@ fun main() {
     Client.connect(mutableListOf(Filter(since = Calendar.getInstance().apply {
         add(Calendar.HOUR, -24)
     }.time)))
+    while (true) {
+        val memAboveBase = memTotal - rt.freeMemory() / 1024 / 1024 - memBase
+        val subscriberQueries = subscribers.flatMap { it.value.flatMap { it.value } }
+        val subscribersSize = subscriberQueries.sumOf { getSize(it) }
+        println("Memory used: ( $memBase + $memAboveBase ) / $memTotal\tSubscriberQueries: ${subscriberQueries.size}\tSubscribers bytes: $subscribersSize")
+        Thread.sleep(10_000)
+    }
 }
 
 private fun sendEvents(channel: String, filters: List<Filter>, ctx: WsContext) {
@@ -155,7 +173,6 @@ private fun sendEvents(channel: String, filters: List<Filter>, ctx: WsContext) {
         ctx.send("""["EVENT","$channel",$it]""")
     }
     println("${rawEvents.size} Events sent in ${System.currentTimeMillis() - t}ms.")
-    ctx.send("""["NOTICE","${rawEvents.size} Events sent in ${System.currentTimeMillis() - t}ms."]""")
 }
 
 private fun processEvent(e: Event, eventJson: String, sender: WsMessageContext? = null): Boolean {
@@ -208,8 +225,7 @@ private fun store(
         }
         true
     } catch (ex: Exception) {
-        sender?.send("""["NOTICE","Something went wrong with event ${e.id.toHex()}"]""")
-        println(ex.message ?: "Something went wrong.")
+        println("Something went wrong with event ${e.id.toHex()}: ${ex.message}")
         false
     }
 }
@@ -229,4 +245,12 @@ private fun forward(
             }
         }
     return true
+}
+
+fun getSize(ser: Serializable): Int {
+    val baos = ByteArrayOutputStream()
+    val oos = ObjectOutputStream(baos)
+    oos.writeObject(ser)
+    oos.close()
+    return baos.size()
 }
