@@ -89,11 +89,10 @@ fun main() {
                         }
                         "EVENT" -> {
                             try {
-                                val eventJson = jsonArray[1].asString
+                                val eventJson = jsonArray[1].asJsonObject
                                 val event = Event.fromJson(eventJson)
-                                val rawEvent = eventJson
                                 println("WS received kind ${event.kind} event.")
-                                processEvent(event, rawEvent, ctx)
+                                processEvent(event, event.toJson(), ctx)
                             } catch (e: Exception) {
                                 ctx.send("""["NOTICE","Something went wrong with Event: ${gson.toJson(jsonArray[1])}"]""")
                             }
@@ -167,8 +166,9 @@ private fun processEvent(e: Event, eventJson: String, sender: WsMessageContext? 
     if (e.kind in 20_000..29_999) {
         return forward(e, eventJson, sender)
     }
-    // forward if storing succeeds
-    return store(e, eventJson, sender) && forward(e, eventJson, sender)
+    return store(e, eventJson, sender)
+            // forward if storing succeeds
+            && forward(e, eventJson, sender)
 }
 
 private fun store(
