@@ -55,6 +55,7 @@ fun main() {
     }
     Javalin.create {
         it.maxRequestSize = 1 * 1024 * 1024
+        it.asyncRequestTimeout = 5L * 60L * 60L * 1_000L
         it.wsFactoryConfig {
             it.policy.maxTextMessageSize = 10 * 1024 * 1024
         }
