@@ -54,6 +54,10 @@ fun main() {
         SchemaUtils.createMissingTablesAndColumns(Events, Tags)
     }
     Javalin.create {
+        it.maxRequestSize = 1 * 1024 * 1024
+        it.wsFactoryConfig {
+            it.policy.maxTextMessageSize = 10 * 1024 * 1024
+        }
         it.addStaticFiles { staticFiles ->
             staticFiles.hostedPath = "/test"
             staticFiles.directory = "/public"
@@ -97,7 +101,7 @@ fun main() {
                             try {
                                 val eventJson = jsonArray[1].asJsonObject
                                 val event = Event.fromJson(eventJson)
-                                println("WS received kind ${event.kind} event.")
+                                println("WS received kind ${event.kind} event. $eventJson")
                                 processEvent(event, event.toJson(), ctx)
                             } catch (e: Exception) {
                                 println("Something went wrong with Event: ${gson.toJson(jsonArray[1])}")
@@ -140,6 +144,7 @@ fun main() {
     Client.connect(mutableListOf(Filter(since = Calendar.getInstance().apply {
         add(Calendar.HOUR, -24)
     }.time)))
+    // HACK: This is an attempt at measuring the resources used and should be removed
     while (true) {
         val memAboveBase = memTotal - rt.freeMemory() / 1024 / 1024 - memBase
         val subscriberQueries = subscribers.flatMap { it.value.flatMap { it.value } }

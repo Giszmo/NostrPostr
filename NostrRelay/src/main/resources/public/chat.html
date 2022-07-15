@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><title>Nostr Voice Chat</title></head>
+<body>
+<h2>Nostr Voice Chat Proof of Concept</h2>
+<p>
+    <button type="button" id="record">Record</button>
+    <button type="button" id="stopRecord" disabled>Send</button>
+    <button type="button" id="dismiss" disabled>Dismiss</button>
+</p>
+<p>
+    <audio id=recordedAudio></audio>
+</p>
+<script type="module">
+import { generatePrivateKey, getPublicKey, relayConnect, relayPool } from './nostr.js'
+window.nostr = { generatePrivateKey, getPublicKey, relayConnect, relayPool }
+</script>
+<script class="containerScript">
+window.addEventListener("load", async () => {
+  window.privKey = window.nostr.generatePrivateKey()
+  window.pubKey = window.nostr.getPublicKey(window.privKey)
+  window.pool = window.nostr.relayPool()
+  window.pool.setPrivateKey(window.privKey)
+  window.pool.addRelay('wss://relay.nostr.info', {read: true, write: true})
+  window.pool.sub({cb: async (event, relay) => {
+    let blob = await b64toBlob(event.content)
+    play(blob)
+  }, filter: {kinds: [21212]}})
+})
+
+navigator
+  .mediaDevices
+  .getUserMedia({audio:true})
+  .then(stream => {
+    handlerFunction(stream)
+  })
+
+function handlerFunction(stream) {
+  rec = new MediaRecorder(stream)
+  rec.ondataavailable = e => {
+    audioChunks.push(e.data)
+    if (rec.state == "inactive") {
+      if (audioChunks[0] === -1) {
+        console.log("dismissed")
+        return
+      }
+      let blob = new Blob(audioChunks,{type:'audio/mp3'})
+      play(blob)
+      sendData(blob)
+    }
+  }
+}
+
+function play(blob) {
+  if (rec.state == "inactive") {
+    recordedAudio.src = URL.createObjectURL(blob)
+    recordedAudio.controls=true
+    recordedAudio.autoplay=true
+  }
+}
+
+function b64toBlob(base64) {
+  return fetch(base64).then(res => res.blob())
+}
+
+function blobToB64(blob) {
+  return new Promise((resolve, _) => {
+    const reader = new FileReader()
+    reader.onloadend = () => resolve(reader.result)
+    reader.readAsDataURL(blob)
+  });
+}
+
+async function sendData(blob) {
+  let event = {
+    pubkey: window.pubKey,
+    created_at: Math.round(Date.now() / 1000),
+    kind: 21212,
+    tags: [],
+    content: await blobToB64(blob)
+  }
+  window.pool.publish(event)
+}
+
+record.onclick = e => {
+  record.style.backgroundColor = "blue"
+  record.disabled = true;
+  stopRecord.disabled=false;
+  dismiss.disabled=false
+  audioChunks = [];
+  rec.start();
+}
+
+stopRecord.onclick = e => {
+  record.style.backgroundColor = "green"
+  record.disabled = false;
+  stopRecord.disabled=true;
+  dismiss.disabled=true
+  rec.stop();
+}
+
+dismiss.onclick = e => {
+  audioChunks.push(-1) // HACK
+  record.style.backgroundColor = "red"
+  record.disabled = false;
+  stopRecord.disabled=true;
+  dismiss.disabled=true
+  rec.stop();
+}
+</script>
+</body>
+</html>
