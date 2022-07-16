@@ -95,8 +95,8 @@ class Filter(
                         it.key.substring(1) to it.value.asJsonArray.map { it.asString }
                     }
                     .ifEmpty { null },
-                since = if (json.has("since")) Date(json.get("since").asLong) else null,
-                until = if (json.has("until")) Date(json.get("until").asLong) else null,
+                since = if (json.has("since")) Date(json.get("since").asLong * 1000) else null,
+                until = if (json.has("until")) Date(json.get("until").asLong * 1000) else null,
                 limit = if (json.has("limit")) json.get("limit").asInt else null
             )
         }
