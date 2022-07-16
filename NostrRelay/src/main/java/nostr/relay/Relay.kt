@@ -144,18 +144,15 @@ fun main() {
         }.time.time / 1000)))
     // HACK: This is an attempt at measuring the resources used and should be removed
     while (true) {
-        subscribers.forEach {
-            it.key.sendPing()
-            println("Ping ${it.key.host()}:")
-            it.value.forEach { (channel, queries) ->
-                println("$channel: ${queries.joinToString()}")
-            }
-        }
-        val memAboveBase = memTotal - rt.freeMemory() / 1024 / 1024 - memBase
-        val subscriberQueries = subscribers.flatMap { it.value.flatMap { it.value } }
-        val subscribersSize = subscriberQueries.sumOf { getSize(it) }
-        println("Memory used: ( $memBase + $memAboveBase ) / $memTotal\tSubscriberQueries: ${subscriberQueries.size}\tSubscribers bytes: $subscribersSize")
-        Thread.sleep(10_000)
+        val queries = subscribers.values.flatMap { it.values }.flatten().map { it.toString() }
+        val queryUse = queries
+            .distinct()
+            .map { it to Collections.frequency(queries, it) }
+            .sortedBy { - it.second }
+            .joinToString("\n") { "${it.second} times ${it.first}" }
+        println("${Date()}: pinging all sockets. ${rt.freeMemory() / 1024 / 1024}MB / ${rt.totalMemory() / 1024 / 1024}MB free. " +
+                "${subscribers.size} subscribers are monitoring these queries:\n$queryUse")
+        Thread.sleep(20_000)
     }
 }
 
