@@ -21,8 +21,8 @@ internal class ProbabilisticFilterTest {
     fun filterMetaDate() {
         val f = ProbabilisticFilter(
             kinds = listOf(0),
-            since = Date(1654299430),
-            until = Date(1654299430)
+            since = Date(1654299430_000),
+            until = Date(1654299430_000)
         )
         val events = events().filter { f.match(it) }
         assertEquals(1, events.count())

@@ -69,7 +69,7 @@ class ProbabilisticFilter(
         if (kinds?.any { event.kind == it } == false) return false
         if (authors && !cuckooFilter.mightContain("p/${event.pubKey.toHex()}")) return false
         if (tags && event.tags.all { !cuckooFilter.mightContain("#${it.first()}/${it[1]}") }) return false
-        if (event.createdAt !in (since?.time ?: Long.MIN_VALUE)..(until?.time ?: Long.MAX_VALUE))
+        if (event.createdAt * 1000 !in (since?.time ?: Long.MIN_VALUE)..(until?.time ?: Long.MAX_VALUE))
             return false
         return true
     }

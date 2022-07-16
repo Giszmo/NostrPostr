@@ -47,10 +47,10 @@ class Filter(
             }
         }
         since?.run {
-            jsonObject.addProperty("since", time)
+            jsonObject.addProperty("since", time / 1000)
         }
         until?.run {
-            jsonObject.addProperty("until", time)
+            jsonObject.addProperty("until", time / 1000)
         }
         limit?.run {
             jsonObject.addProperty("limit", limit)
@@ -65,7 +65,7 @@ class Filter(
         tags?.forEach { tag ->
             if (!event.tags.any { it.first() == tag.key && it[1] in tag.value }) return false
         }
-        if (event.createdAt !in (since?.time ?: Long.MIN_VALUE)..(until?.time ?: Long.MAX_VALUE))
+        if (event.createdAt * 1000 !in (since?.time ?: Long.MIN_VALUE)..(until?.time ?: Long.MAX_VALUE))
             return false
         return true
     }
