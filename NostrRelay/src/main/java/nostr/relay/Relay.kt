@@ -42,9 +42,6 @@ val featureList = mapOf(
 
 fun main() {
     val rt = Runtime.getRuntime()
-    val memTotal = rt.totalMemory() / 1024 / 1024
-    val memBase = memTotal - rt.freeMemory() / 1024 / 1024
-
     Database.connect("jdbc:sqlite:events.db", "org.sqlite.JDBC")
     TransactionManager.manager.defaultIsolationLevel =
         Connection.TRANSACTION_SERIALIZABLE
@@ -142,14 +139,19 @@ fun main() {
         since = Calendar.getInstance().apply {
             add(Calendar.HOUR, -24)
         }.time.time / 1000)))
-    // HACK: This is an attempt at measuring the resources used and should be removed
     while (true) {
-        val queries = subscribers.values.flatMap { it.values }.flatten().map { it.toString() }
+        subscribers.forEach {it.key.sendPing()}
+        val queries = subscribers
+            .values
+            .flatMap { it.values }
+            .flatten()
+            .map { it.toString() }
         val queryUse = queries
             .distinct()
             .map { it to Collections.frequency(queries, it) }
             .sortedBy { - it.second }
             .joinToString("\n") { "${it.second} times ${it.first}" }
+        // HACK: This is an attempt at measuring the resources used and should be removed
         println("${Date()}: pinging all sockets. ${rt.freeMemory() / 1024 / 1024}MB / ${rt.totalMemory() / 1024 / 1024}MB free. " +
                 "${subscribers.size} subscribers are monitoring these queries:\n$queryUse")
         Thread.sleep(20_000)
@@ -171,8 +173,7 @@ private fun sendEvents(channel: String, filters: List<Filter>, ctx: WsContext) {
                 it.forEach { query.andWhere { (Tags.key eq it.key) and (Tags.value inList it.value) } }
             }
             filter.limit?.let { query.limit(it) }
-            val raws = query.map { it[raw] }
-            rawEvents.addAll(raws)
+            rawEvents.addAll(query.map { it[raw] })
         }
     }
     val t = System.currentTimeMillis()
@@ -190,15 +191,14 @@ private fun processEvent(e: Event, eventJson: String, sender: WsMessageContext? 
     if (e.kind in 20_000..29_999) {
         return forward(e, eventJson, sender)
     }
-    return store(e, eventJson, sender)
+    return store(e, eventJson)
             // forward if storing succeeds
             && forward(e, eventJson, sender)
 }
 
 private fun store(
     e: Event,
-    eventJson: String,
-    sender: WsMessageContext?
+    eventJson: String
 ): Boolean = transaction {
     try {
         if (!DbEvent.find { hash eq e.id.toHex() }.empty()) {
@@ -252,12 +252,4 @@ private fun forward(
             }
         }
     return true
-}
-
-fun getSize(ser: Serializable): Int {
-    val baos = ByteArrayOutputStream()
-    val oos = ObjectOutputStream(baos)
-    oos.writeObject(ser)
-    oos.close()
-    return baos.size()
 }
