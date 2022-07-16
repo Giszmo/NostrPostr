@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Test
 import java.io.ByteArrayOutputStream
 import java.io.ObjectOutputStream
 import java.io.Serializable
-import java.util.*
 
 internal class ProbabilisticFilterTest {
     @Test
@@ -21,8 +20,8 @@ internal class ProbabilisticFilterTest {
     fun filterMetaDate() {
         val f = ProbabilisticFilter(
             kinds = listOf(0),
-            since = Date(1654299430_000),
-            until = Date(1654299430_000)
+            since = 1654299430,
+            until = 1654299430
         )
         val events = events().filter { f.match(it) }
         assertEquals(1, events.count())

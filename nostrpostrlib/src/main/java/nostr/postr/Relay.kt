@@ -85,7 +85,7 @@ class Relay(
 
     fun sendFilter(reconnectTs: Long? = null) {
         val filters = if (reconnectTs != null) {
-            Client.filters.map { Filter(it.ids, it.authors, it.kinds, it.tags, since = Date(reconnectTs)) }
+            Client.filters.map { Filter(it.ids, it.authors, it.kinds, it.tags, since = reconnectTs) }
         } else {
             Client.filters
         }

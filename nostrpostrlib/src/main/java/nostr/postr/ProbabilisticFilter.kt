@@ -22,11 +22,11 @@ class ProbabilisticFilter(
     authors: List<String>? = null,
     val kinds: List<Int>? = null,
     tags: Map<String, List<String>>? = null,
-    val since: Date? = null,
-    val until: Date? = null,
+    val since: Long? = null,
+    val until: Long? = null,
     val limit: Int? = null,
     falsePositiveRate: Double = 1.0 / 10_000_000
-): Serializable {
+) : Serializable {
     val ids: Boolean
     val authors: Boolean
     val tags: Boolean
@@ -34,12 +34,13 @@ class ProbabilisticFilter(
 
     init {
         // Don't accept filters that are obviously not matching any valid Events
-        check(!(
-                ids?.isEmpty() == true ||
-                authors?.isEmpty() == true ||
-                kinds?.isEmpty() == true ||
-                tags?.isEmpty() == true ||
-                since != null && until != null && since.after(until)))
+        check(
+            !(ids?.isEmpty() == true ||
+                    authors?.isEmpty() == true ||
+                    kinds?.isEmpty() == true ||
+                    tags?.isEmpty() == true ||
+                    (since ?: Long.MIN_VALUE) > (until ?: Long.MAX_VALUE))
+        )
         val stringCount = (ids?.size ?: 0) +
                 (authors?.size ?: 0) +
                 (tags?.flatMap { it.value }?.size ?: 0)
@@ -69,7 +70,7 @@ class ProbabilisticFilter(
         if (kinds?.any { event.kind == it } == false) return false
         if (authors && !cuckooFilter.mightContain("p/${event.pubKey.toHex()}")) return false
         if (tags && event.tags.all { !cuckooFilter.mightContain("#${it.first()}/${it[1]}") }) return false
-        if (event.createdAt * 1000 !in (since?.time ?: Long.MIN_VALUE)..(until?.time ?: Long.MAX_VALUE))
+        if (event.createdAt !in (since ?: Long.MIN_VALUE)..(until ?: Long.MAX_VALUE))
             return false
         return true
     }
@@ -80,8 +81,8 @@ class ProbabilisticFilter(
                 (if (ids) "ids " else "") +
                 (if (authors) "authors " else "") +
                 (if (tags) "tags " else "") +
-                (since?.let { "after: $it " } ?: "") +
-                (until?.let { "until: $it " } ?: "") +
+                (since?.let { "after: ${Date(it * 1000)} " } ?: "") +
+                (until?.let { "until: ${Date(it * 1000)} " } ?: "") +
                 ")"
     }
 
@@ -98,8 +99,10 @@ class ProbabilisticFilter(
             check(json.keySet().all { it.startsWith("#") || it in Filter.declaredFields })
             return ProbabilisticFilter(
                 ids = if (json.has("ids")) json.getAsJsonArray("ids").map { it.asString } else null,
-                authors = if (json.has("authors")) json.getAsJsonArray("authors").map { it.asString } else null,
-                kinds = if (json.has("kinds")) json.getAsJsonArray("kinds").map { it.asInt } else null,
+                authors = if (json.has("authors")) json.getAsJsonArray("authors")
+                    .map { it.asString } else null,
+                kinds = if (json.has("kinds")) json.getAsJsonArray("kinds")
+                    .map { it.asInt } else null,
                 tags = json
                     .entrySet()
                     .filter { it.key.startsWith("#") }
@@ -107,8 +110,8 @@ class ProbabilisticFilter(
                         it.key.substring(1) to it.value.asJsonArray.map { it.asString }
                     }
                     .ifEmpty { null },
-                since = if (json.has("since")) Date(json.get("since").asLong * 1000) else null,
-                until = if (json.has("until")) Date(json.get("until").asLong * 1000) else null,
+                since = if (json.has("since")) json.get("since").asLong else null,
+                until = if (json.has("until")) json.get("until").asLong else null,
                 limit = if (json.has("limit")) json.get("limit").asInt else null
             )
         }

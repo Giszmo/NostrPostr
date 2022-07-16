@@ -15,18 +15,18 @@ class Filter(
     val authors: List<String>? = null,
     val kinds: List<Int>? = null,
     val tags: Map<String, List<String>>? = null,
-    val since: Date? = null,
-    val until: Date? = null,
+    val since: Long? = null,
+    val until: Long? = null,
     val limit: Int? = null
 ) : Serializable {
     init {
         // Don't accept filters that are obviously not matching any valid Events
         check(
-            !(ids?.isEmpty() == true ||
+            !((ids?.isEmpty() == true ||
                     authors?.isEmpty() == true ||
                     kinds?.isEmpty() == true ||
                     tags?.isEmpty() == true ||
-                    since != null && until != null && since.after(until))
+                    (since ?: Long.MIN_VALUE) > (until ?: Long.MAX_VALUE)))
         )
     }
 
@@ -47,10 +47,10 @@ class Filter(
             }
         }
         since?.run {
-            jsonObject.addProperty("since", time / 1000)
+            jsonObject.addProperty("since", since)
         }
         until?.run {
-            jsonObject.addProperty("until", time / 1000)
+            jsonObject.addProperty("until", until)
         }
         limit?.run {
             jsonObject.addProperty("limit", limit)
@@ -65,7 +65,7 @@ class Filter(
         tags?.forEach { tag ->
             if (!event.tags.any { it.first() == tag.key && it[1] in tag.value }) return false
         }
-        if (event.createdAt * 1000 !in (since?.time ?: Long.MIN_VALUE)..(until?.time ?: Long.MAX_VALUE))
+        if (event.createdAt !in (since ?: Long.MIN_VALUE)..(until ?: Long.MAX_VALUE))
             return false
         return true
     }
@@ -95,8 +95,8 @@ class Filter(
                         it.key.substring(1) to it.value.asJsonArray.map { it.asString }
                     }
                     .ifEmpty { null },
-                since = if (json.has("since")) Date(json.get("since").asLong * 1000) else null,
-                until = if (json.has("until")) Date(json.get("until").asLong * 1000) else null,
+                since = if (json.has("since")) json.get("since").asLong else null,
+                until = if (json.has("until")) json.get("until").asLong else null,
                 limit = if (json.has("limit")) json.get("limit").asInt else null
             )
         }

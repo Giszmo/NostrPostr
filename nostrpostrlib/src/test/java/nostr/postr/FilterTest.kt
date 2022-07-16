@@ -5,7 +5,6 @@ import nostr.postr.events.EventTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
-import java.util.*
 
 internal class FilterTest {
     @Test
@@ -19,8 +18,8 @@ internal class FilterTest {
     fun filterMetaDate() {
         val f = Filter(
             kinds = listOf(0),
-            since = Date(1654299430_000),
-            until = Date(1654299430_000)
+            since = 1654299430,
+            until = 1654299430
         )
         val events = events().filter { f.match(it) }
         assertEquals(1, events.count())
@@ -76,7 +75,7 @@ internal class FilterTest {
                     "ec25b9c7ff8fa8ccdc7d2e3bfa06df82448a88c40212c6d19bce4a6f747b736b"
                 )
             ),
-            since = Date(1654299430_000)
+            since = 1654299430
         )
         assertEquals(json, filter.toJson())
     }
