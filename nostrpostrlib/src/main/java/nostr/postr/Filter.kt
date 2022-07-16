@@ -18,7 +18,18 @@ class Filter(
     val since: Date? = null,
     val until: Date? = null,
     val limit: Int? = null
-): Serializable {
+) : Serializable {
+    init {
+        // Don't accept filters that are obviously not matching any valid Events
+        check(
+            !(ids?.isEmpty() == true ||
+                    authors?.isEmpty() == true ||
+                    kinds?.isEmpty() == true ||
+                    tags?.isEmpty() == true ||
+                    since != null && until != null && since.after(until))
+        )
+    }
+
     fun toJson(): String {
         val jsonObject = JsonObject()
         ids?.run {
@@ -31,15 +42,15 @@ class Filter(
             jsonObject.add("kinds", JsonArray().apply { kinds.forEach { add(it) } })
         }
         tags?.run {
-            tags.entries.forEach { kv ->
+            entries.forEach { kv ->
                 jsonObject.add("#${kv.key}", JsonArray().apply { kv.value.forEach { add(it) } })
             }
         }
         since?.run {
-            jsonObject.addProperty("since", since.time)
+            jsonObject.addProperty("since", time)
         }
         until?.run {
-            jsonObject.addProperty("until", until.time)
+            jsonObject.addProperty("until", time)
         }
         limit?.run {
             jsonObject.addProperty("limit", limit)
@@ -66,14 +77,17 @@ class Filter(
             val jsonFilter = gson.fromJson(json, JsonObject::class.java)
             return fromJson(jsonFilter)
         }
+
         val declaredFields = Filter::class.java.declaredFields.map { it.name }
         fun fromJson(json: JsonObject): Filter {
             // sanity check
             check(json.keySet().all { it.startsWith("#") || it in declaredFields })
             return Filter(
                 ids = if (json.has("ids")) json.getAsJsonArray("ids").map { it.asString } else null,
-                authors = if (json.has("authors")) json.getAsJsonArray("authors").map { it.asString } else null,
-                kinds = if (json.has("kinds")) json.getAsJsonArray("kinds").map { it.asInt } else null,
+                authors = if (json.has("authors")) json.getAsJsonArray("authors")
+                    .map { it.asString } else null,
+                kinds = if (json.has("kinds")) json.getAsJsonArray("kinds")
+                    .map { it.asInt } else null,
                 tags = json
                     .entrySet()
                     .filter { it.key.startsWith("#") }

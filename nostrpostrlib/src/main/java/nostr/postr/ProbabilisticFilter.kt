@@ -33,6 +33,13 @@ class ProbabilisticFilter(
     val cuckooFilter: CuckooFilter<String>
 
     init {
+        // Don't accept filters that are obviously not matching any valid Events
+        check(!(
+                ids?.isEmpty() == true ||
+                authors?.isEmpty() == true ||
+                kinds?.isEmpty() == true ||
+                tags?.isEmpty() == true ||
+                since != null && until != null && since.after(until)))
         val stringCount = (ids?.size ?: 0) +
                 (authors?.size ?: 0) +
                 (tags?.flatMap { it.value }?.size ?: 0)
@@ -65,6 +72,17 @@ class ProbabilisticFilter(
         if (event.createdAt !in (since?.time ?: Long.MIN_VALUE)..(until?.time ?: Long.MAX_VALUE))
             return false
         return true
+    }
+
+    override fun toString(): String {
+        return "ProbabilisticFilter( " +
+                (kinds?.let { "kinds: [${it.joinToString()}] " } ?: "") +
+                (if (ids) "ids " else "") +
+                (if (authors) "authors " else "") +
+                (if (tags) "tags " else "") +
+                (since?.let { "after: $it " } ?: "") +
+                (until?.let { "until: $it " } ?: "") +
+                ")"
     }
 
     companion object {

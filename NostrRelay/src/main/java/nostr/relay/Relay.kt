@@ -89,7 +89,7 @@ fun main() {
                                     try {
                                         Filter.fromJson(it.asJsonObject)
                                     } catch (e: Exception) {
-                                        ctx.send("""["NOTICE","Something went wrong with filter $index. Ignoring request."]""")
+                                        ctx.send("""["NOTICE","Something went wrong with filter $index on channel $channel. Ignoring request."]""")
                                         println("Something went wrong with filter $index. Ignoring request.\n${it}")
                                         return@onMessage
                                     }
@@ -111,11 +111,7 @@ fun main() {
                         "CLOSE" -> {
                             val channel = jsonArray[1].asString
                             subscribers[ctx]!!.remove(channel)
-                            println("Channel $channel close requested.")
-                            if (subscribers[ctx]!!.isEmpty()) {
-                                // Last channel closed. Disconnect.
-                                ctx.closeSession()
-                            }
+                            println("Channel $channel closed.")
                         }
                         else -> ctx.send("""["NOTICE","Could not handle $cmd"]""")
                     }
@@ -147,6 +143,13 @@ fun main() {
     }.time)))
     // HACK: This is an attempt at measuring the resources used and should be removed
     while (true) {
+        subscribers.forEach {
+            it.key.sendPing()
+            println("Ping ${it.key.host()}:")
+            it.value.forEach { (channel, queries) ->
+                println("$channel: ${queries.joinToString()}")
+            }
+        }
         val memAboveBase = memTotal - rt.freeMemory() / 1024 / 1024 - memBase
         val subscriberQueries = subscribers.flatMap { it.value.flatMap { it.value } }
         val subscribersSize = subscriberQueries.sumOf { getSize(it) }
