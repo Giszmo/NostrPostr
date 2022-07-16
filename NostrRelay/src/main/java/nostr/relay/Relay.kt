@@ -138,9 +138,10 @@ fun main() {
             println("${relay.url}: ${type.name}")
         }
     })
-    Client.connect(mutableListOf(Filter(since = Calendar.getInstance().apply {
-        add(Calendar.HOUR, -24)
-    }.time)))
+    Client.connect(mutableListOf(Filter(
+        since = Calendar.getInstance().apply {
+            add(Calendar.HOUR, -24)
+        }.time.time / 1000)))
     // HACK: This is an attempt at measuring the resources used and should be removed
     while (true) {
         subscribers.forEach {
