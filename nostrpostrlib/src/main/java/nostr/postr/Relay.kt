@@ -3,7 +3,6 @@ package nostr.postr
 import com.google.gson.JsonElement
 import nostr.postr.events.Event
 import okhttp3.*
-import java.util.*
 import kotlin.collections.HashSet
 
 class Relay(
@@ -85,7 +84,7 @@ class Relay(
 
     fun sendFilter(reconnectTs: Long? = null) {
         val filters = if (reconnectTs != null) {
-            Client.filters.map { Filter(it.ids, it.authors, it.kinds, it.tags, since = reconnectTs) }
+            Client.filters.map { JsonFilter(it.ids, it.authors, it.kinds, it.tags, since = reconnectTs) }
         } else {
             Client.filters
         }

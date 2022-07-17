@@ -6,8 +6,8 @@ import org.junit.jupiter.api.Test
 import org.spongycastle.util.encoders.Hex
 
 internal class UtilsTest {
-    val alice = Persona(Hex.decode("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"))
-    val bob = Persona(Hex.decode("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"))
+    val alice = Persona(Hex.decode("a".repeat(64)))
+    val bob = Persona(Hex.decode("b".repeat(64)))
 
     @Test
     fun privkeyCreate() {

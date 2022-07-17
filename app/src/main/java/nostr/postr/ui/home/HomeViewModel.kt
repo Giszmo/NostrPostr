@@ -11,10 +11,10 @@ class HomeViewModel : ViewModel() {
     private val _personas: MutableLiveData<MutableList<Persona>> by lazy {
         MutableLiveData<MutableList<Persona>>().also {
             it.value = mutableListOf(
-                Persona(privKey = Hex.decode("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")).apply { petName = "Alice" },
-                Persona(privKey = Hex.decode("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb")).apply { petName = "Bob" },
-                Persona(privKey = Hex.decode("cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc")).apply { petName = "Carol" },
-                Persona(pubKey = Utils.pubkeyCreate(Hex.decode("dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"))).apply { petName = "Dave" }
+                Persona(privKey = Hex.decode("a".repeat(64))).apply { petName = "Alice" },
+                Persona(privKey = Hex.decode("b".repeat(64))).apply { petName = "Bob" },
+                Persona(privKey = Hex.decode("c".repeat(64))).apply { petName = "Carol" },
+                Persona(pubKey = Utils.pubkeyCreate(Hex.decode("d".repeat(64)))).apply { petName = "Dave" }
             )
             loadPersonas()
         }

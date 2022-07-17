@@ -4,7 +4,7 @@ import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonObject
 import nostr.postr.Client
-import nostr.postr.Filter
+import nostr.postr.JsonFilter
 import nostr.postr.events.Event
 
 /**
@@ -35,7 +35,7 @@ class LoadJesterEvents {
         fun main(vararg args: String) {
             Client.subscribe(listener)
             // We request to get only kind 30 events - the kind the Jester Chess client uses
-            Client.connect(mutableListOf(Filter(kinds = listOf(30))))
+            Client.connect(mutableListOf(JsonFilter(kinds = listOf(30))))
             while (running) {
                 Thread.sleep(100)
             }

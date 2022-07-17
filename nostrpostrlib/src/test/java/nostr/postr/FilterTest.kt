@@ -9,14 +9,14 @@ import org.junit.jupiter.api.Test
 internal class FilterTest {
     @Test
     fun filterKind() {
-        val f = Filter(kinds = listOf(0, 4, 5))
+        val f = JsonFilter(kinds = listOf(0, 4, 5))
         val events = events().filter { f.match(it) }
         assertEquals(135, events.count())
     }
 
     @Test
     fun filterMetaDate() {
-        val f = Filter(
+        val f = JsonFilter(
             kinds = listOf(0),
             since = 1654299430,
             until = 1654299430
@@ -27,7 +27,7 @@ internal class FilterTest {
 
     @Test
     fun referencesEvents() {
-        val f = Filter(
+        val f = JsonFilter(
             tags = mapOf(
                 "e" to listOf(
                     "f6908a8b6323650dd34498efb191d951a5c7ef05d5a016eea4a27652b417ddbd",
@@ -42,7 +42,7 @@ internal class FilterTest {
     @Test
     fun fromJson() {
         val json = """{"kinds":[1],"#foo":["bar","baz"],"#loo":["lar","laz"]}"""
-        val filter = Filter.fromJson(json)
+        val filter = JsonFilter.fromJson(json)
         assertEquals(1, filter.kinds!![0])
         assertEquals("bar, baz", filter.tags!!["foo"]!!.joinToString())
         assertEquals("lar, laz", filter.tags!!["loo"]!!.joinToString())
@@ -51,7 +51,7 @@ internal class FilterTest {
     @Test
     fun fromJsonEmpty() {
         val json = "{}"
-        Filter.fromJson(json).run {
+        JsonFilter.fromJson(json).run {
             assertNull(kinds)
             assertNull(authors)
             assertNull(tags)
@@ -65,7 +65,7 @@ internal class FilterTest {
     fun toJson() {
         val json =
             """{"kinds":[1],"#foo":["bar","baz"],"#loo":["lar","laz"],"#e":["f6908a8b6323650dd34498efb191d951a5c7ef05d5a016eea4a27652b417ddbd","ec25b9c7ff8fa8ccdc7d2e3bfa06df82448a88c40212c6d19bce4a6f747b736b"],"since":1654299430}"""
-        val filter = Filter(
+        val filter = JsonFilter(
             kinds = listOf(1),
             tags = mapOf(
                 "foo" to listOf("bar", "baz"),
@@ -83,7 +83,7 @@ internal class FilterTest {
     @Test
     fun toJsonEmpty() {
         val json = "{}"
-        val filter = Filter()
+        val filter = JsonFilter()
         assertEquals(json, filter.toJson())
     }
 

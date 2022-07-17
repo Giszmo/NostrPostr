@@ -75,16 +75,18 @@ internal class ProbabilisticFilterTest {
             "#c" to (1..1000).map { Persona().pubKey.toHex() }
         )
 
-        val idsFilter = Filter(ids = ids)
-        val authorsFilter = Filter(authors = authors)
-        val tagsFilter = Filter(tags = tags)
+        val filterPairs = listOf(
+            Pair(JsonFilter(ids = ids), ProbabilisticFilter(ids = ids)),
+            Pair(JsonFilter(authors = authors), ProbabilisticFilter(authors = authors)),
+            Pair(JsonFilter(tags = tags), ProbabilisticFilter(tags = tags)),
+            Pair(JsonFilter(tags = tags, authors = authors, ids = ids), ProbabilisticFilter(tags = tags, authors = authors, ids = ids)),
+            Pair(JsonFilter(), ProbabilisticFilter())
+        )
 
-        val idsPFilter = ProbabilisticFilter(ids = ids)
-        val authorsPFilter = ProbabilisticFilter(authors = authors)
-        val tagsPFilter = ProbabilisticFilter(tags = tags)
-
-        listOf(idsFilter, authorsFilter, tagsFilter, idsPFilter, authorsPFilter, tagsPFilter).forEach {
-            println("${getSize(it)}")
+        filterPairs.forEach {
+            val sizeFirst = getSize(it.first)
+            val sizeSecond = getSize(it.second)
+            println("${sizeFirst}B vs. ${sizeSecond}B (saving ${100 - 100 * sizeSecond / sizeFirst}%) for ${it.second}")
         }
     }
 

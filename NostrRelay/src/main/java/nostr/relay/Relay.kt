@@ -18,9 +18,6 @@ import nostr.relay.Events.raw
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
-import java.io.ByteArrayOutputStream
-import java.io.ObjectOutputStream
-import java.io.Serializable
 import java.sql.Connection
 import java.util.*
 
@@ -29,7 +26,7 @@ val gson: Gson = GsonBuilder().create()
 /**
  * Per socket there can be multiple channels with multiple filters each.
  */
-val subscribers = mutableMapOf<WsContext, MutableMap<String, List<ProbabilisticFilter>>>()
+val subscribers = mutableMapOf<WsContext, MutableMap<String, List<Filter>>>()
 val featureList = mapOf(
     "id" to "ws://localhost:7070/",
     "name" to "NostrPostrRelay",
@@ -84,14 +81,14 @@ fun main() {
                                 .filterIndexed { index, _ -> index > 1 }
                                 .mapIndexed { index, it ->
                                     try {
-                                        Filter.fromJson(it.asJsonObject)
+                                        JsonFilter.fromJson(it.asJsonObject)
                                     } catch (e: Exception) {
                                         ctx.send("""["NOTICE","Something went wrong with filter $index on channel $channel. Ignoring request."]""")
                                         println("Something went wrong with filter $index. Ignoring request.\n${it}")
                                         return@onMessage
                                     }
                                 }
-                            subscribers[ctx]!![channel] = filters.map { ProbabilisticFilter.fromFilter(it) }
+                            subscribers[ctx]!![channel] = filters.map { it.spaceOptimized() }
                             sendEvents(channel, filters, ctx)
                             ctx.send("""["EOSE","$channel"]""")
                         }
@@ -135,7 +132,7 @@ fun main() {
             println("${relay.url}: ${type.name}")
         }
     })
-    Client.connect(mutableListOf(Filter(
+    Client.connect(mutableListOf(JsonFilter(
         since = Calendar.getInstance().apply {
             add(Calendar.HOUR, -24)
         }.time.time / 1000)))
@@ -158,7 +155,7 @@ fun main() {
     }
 }
 
-private fun sendEvents(channel: String, filters: List<Filter>, ctx: WsContext) {
+private fun sendEvents(channel: String, filters: List<JsonFilter>, ctx: WsContext) {
     val rawEvents = mutableSetOf<String>()
     transaction {
         filters.forEach { filter ->

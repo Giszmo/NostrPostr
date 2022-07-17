@@ -2,6 +2,7 @@ package nostr.postr.examples
 
 import nostr.postr.Client
 import nostr.postr.Filter
+import nostr.postr.JsonFilter
 import nostr.postr.events.Event
 import nostr.postr.events.TextNoteEvent
 
@@ -32,7 +33,7 @@ class LoadShortSimpleTextNotes {
         @JvmStatic
         fun main(vararg args: String) {
             Client.subscribe(listener)
-            Client.connect(mutableListOf(Filter(kinds = listOf(TextNoteEvent.kind))))
+            Client.connect(mutableListOf(JsonFilter(kinds = listOf(TextNoteEvent.kind))))
             while (running) {
                 Thread.sleep(100)
             }
