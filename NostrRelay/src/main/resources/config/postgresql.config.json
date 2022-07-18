@@ -1,0 +1,8 @@
+{
+  "comment":     "This is a demo config file for using postgresql. Watch out for [PLACE_HOLDERS]. The actual config file has to reside in this same folder named local.config.json",
+  "db":          "postgresql",
+  "pg_url":      "jdbc:postgresql://localhost:5432/[DB_NAME]",
+  "pg_driver":   "org.postgresql.Driver",
+  "pg_user":     "[USER_NAME]",
+  "pg_password": "[PASSWORD]"
+}

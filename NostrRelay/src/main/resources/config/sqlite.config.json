@@ -1,0 +1,6 @@
+{
+  "comment":      "This is a demo config file for using postgresql. Watch out for [PLACE_HOLDERS]. The actual config file has to reside in this same folder named local.config.json",
+  "db":           "sqlite",
+  "lite_url":     "jdbc:sqlite:[DB_NAME]",
+  "lite_driver":  "org.sqlite.JDBC"
+}

@@ -1,9 +1,7 @@
 package nostr.relay
 
-import com.google.gson.Gson
-import com.google.gson.GsonBuilder
-import com.google.gson.JsonArray
-import com.google.gson.JsonSyntaxException
+import com.google.gson.*
+import com.google.gson.reflect.TypeToken
 import io.javalin.Javalin
 import io.javalin.http.staticfiles.Location
 import io.javalin.websocket.WsContext
@@ -28,21 +26,47 @@ val gson: Gson = GsonBuilder().create()
  */
 val subscribers = mutableMapOf<WsContext, MutableMap<String, List<Filter>>>()
 val featureList = mapOf(
-    "id" to "ws://localhost:7070/",
+    "id" to "wss://relay.nostr.info",
     "name" to "NostrPostrRelay",
-    "description" to "Relay running NostrPostr.",
+    "description" to "Relay running NostrPostr by https://nostr.info",
     "pubkey" to "46fcbe3065eaf1ae7811465924e48923363ff3f526bd6f73d7c184b16bd8ce4d",
     "supported_nips" to listOf(1, 2, 9, 11, 12, 15, 16),
     "software" to "https://github.com/Giszmo/NostrPostr",
     "version" to "0"
 )
 
+class NostrRelay
+
 fun main() {
     val rt = Runtime.getRuntime()
-    Database.connect("jdbc:sqlite:events.db", "org.sqlite.JDBC")
-    TransactionManager.manager.defaultIsolationLevel =
-        Connection.TRANSACTION_SERIALIZABLE
-    // or Connection.TRANSACTION_READ_UNCOMMITTED
+    val config: Map<String, String> = NostrRelay::class.java.getResource("/config/local.config.json")
+        ?.readText()
+        ?.run {
+            gson.fromJson(this, object: TypeToken<Map<String, String>>() {}.type)
+        }
+        ?: mapOf(
+            "db" to "sqlite",
+            "url" to "jdbc:sqlite:events.db",
+            "driver" to "org.sqlite.JDBC"
+        )
+    when (config["db"]) {
+        "postgresql" -> {
+            Database.connect(
+                url = config["pg_url"]!!,
+                driver = config["pg_driver"]!!,
+                user = config["pg_user"]!!,
+                password = config["pg_password"]!!)
+        }
+        else -> {
+            Database.connect(
+                url = config["lite_url"]!!,
+                driver = config["lite_url"]!!,
+            )
+            TransactionManager.manager.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE
+            // or Connection.TRANSACTION_READ_UNCOMMITTED
+        }
+    }
+
     transaction {
         addLogger(StdOutSqlLogger)
         SchemaUtils.createMissingTablesAndColumns(Events, Tags)
@@ -79,13 +103,13 @@ fun main() {
                             val channel = jsonArray[1].asString
                             val filters = jsonArray
                                 .filterIndexed { index, _ -> index > 1 }
-                                .mapIndexed { index, it ->
+                                .mapIndexedNotNull { index, it ->
                                     try {
                                         JsonFilter.fromJson(it.asJsonObject)
                                     } catch (e: Exception) {
-                                        ctx.send("""["NOTICE","Something went wrong with filter $index on channel $channel. Ignoring request."]""")
-                                        println("Something went wrong with filter $index. Ignoring request.\n${it}")
-                                        return@onMessage
+                                        ctx.send("""["NOTICE","Something went wrong with filter $index on channel $channel. Ignoring. Was it a NoMatch?"]""")
+                                        println("Something went wrong with filter $index.\n${it}")
+                                        null // ignore just this query
                                     }
                                 }
                             subscribers[ctx]!![channel] = filters.map { it.spaceOptimized() }
@@ -132,10 +156,15 @@ fun main() {
             println("${relay.url}: ${type.name}")
         }
     })
-    Client.connect(mutableListOf(JsonFilter(
-        since = Calendar.getInstance().apply {
-            add(Calendar.HOUR, -24)
-        }.time.time / 1000)))
+    Client.connect(
+        mutableListOf(
+            JsonFilter(
+                since = Calendar.getInstance().apply {
+                    add(Calendar.HOUR, -24)
+                }.time.time / 1000
+            )
+        )
+    )
     while (true) {
         subscribers.forEach {it.key.sendPing()}
         val queries = subscribers
@@ -143,14 +172,16 @@ fun main() {
             .flatMap { it.values }
             .flatten()
             .map { it.toString() }
+        val channelCount = subscribers
+            .values
+            .count()
         val queryUse = queries
             .distinct()
             .map { it to Collections.frequency(queries, it) }
             .sortedBy { - it.second }
             .joinToString("\n") { "${it.second} times ${it.first}" }
-        // HACK: This is an attempt at measuring the resources used and should be removed
         println("${Date()}: pinging all sockets. ${rt.freeMemory() / 1024 / 1024}MB / ${rt.totalMemory() / 1024 / 1024}MB free. " +
-                "${subscribers.size} subscribers are monitoring these queries:\n$queryUse")
+                "${subscribers.size} subscribers maintain $channelCount channels and are monitoring these queries:\n$queryUse")
         Thread.sleep(20_000)
     }
 }
