@@ -33,18 +33,8 @@
             function setupWebSocket() {
                 ws = new WebSocket(relay.value);
                 ws.onmessage = msg => {
-                    console.log(msg.data)
                     window.received.push(msg.data)
-                    const l = window.received.length
-                    var msgs = ""
-                    for (var i=10; i>0; i--) {
-                        if (l >= i) {
-                            msgs += window.received[l-i] + "\n"
-                        }
-                    }
-                    output.value = `Received ${l} events. Last ones:
-${msgs}`
-                };
+                }
                 ws.onclose = setupWebSocket; // should reconnect if connection is closed
                 sendInput()
             }

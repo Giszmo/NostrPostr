@@ -37,18 +37,20 @@ val featureList = mapOf(
 
 class NostrRelay
 
+val config: Map<String, String> = NostrRelay::class.java.getResource("/config/local.config.json")
+    ?.readText()
+    ?.run {
+        gson.fromJson(this, object: TypeToken<Map<String, String>>() {}.type)
+    }
+    ?: mapOf( // default configuration
+        "db" to "sqlite",
+        "url" to "jdbc:sqlite:events.db",
+        "driver" to "org.sqlite.JDBC",
+        "fullSync" to "false"
+    )
+
 fun main() {
     val rt = Runtime.getRuntime()
-    val config: Map<String, String> = NostrRelay::class.java.getResource("/config/local.config.json")
-        ?.readText()
-        ?.run {
-            gson.fromJson(this, object: TypeToken<Map<String, String>>() {}.type)
-        }
-        ?: mapOf(
-            "db" to "sqlite",
-            "url" to "jdbc:sqlite:events.db",
-            "driver" to "org.sqlite.JDBC"
-        )
     when (config["db"]) {
         "postgresql" -> {
             Database.connect(
@@ -156,15 +158,12 @@ fun main() {
             println("${relay.url}: ${type.name}")
         }
     })
-    Client.connect(
-        mutableListOf(
-            JsonFilter(
-                since = Calendar.getInstance().apply {
-                    add(Calendar.HOUR, -24)
-                }.time.time / 1000
-            )
-        )
-    )
+    val filter = if(config["fullSync"] == "true") {
+        JsonFilter()
+    } else {
+        JsonFilter(since = Calendar.getInstance().apply { add(Calendar.HOUR, -24) }.time.time / 1000)
+    }
+    Client.connect(mutableListOf(filter))
     while (true) {
         subscribers.forEach {it.key.sendPing()}
         val queries = subscribers
