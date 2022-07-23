@@ -216,11 +216,11 @@ private fun processEvent(e: Event, eventJson: String, sender: WsMessageContext? 
     sender?.let { Client.send(e) }
     // ephemeral events get sent and forgotten
     if (e.kind in 20_000..29_999) {
-        return forward(e, eventJson, sender)
+        return forward(e, eventJson)
     }
     return store(e, eventJson)
             // forward if storing succeeds
-            && forward(e, eventJson, sender)
+            && forward(e, eventJson)
 }
 
 private fun store(
@@ -266,11 +266,9 @@ private fun store(
 
 private fun forward(
     event: Event,
-    eventJson: String,
-    ctx: WsMessageContext?
+    eventJson: String
 ): Boolean {
     subscribers
-        .filter { it.key.sessionId != ctx?.sessionId }
         .forEach { (wsContext, channelFilters) ->
             channelFilters.forEach { (channel, filters) ->
                 if (filters.any { it.match(event) }) {
