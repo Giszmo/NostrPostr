@@ -15,6 +15,14 @@ interface Filter {
     fun match(event: Event): Boolean
 }
 
+object NoMatchFilter: Filter {
+    fun toJson() = """{"ids":[]}"""
+
+    override fun toString() = "NoMatchFilter"
+
+    override fun match(event: Event) = false
+}
+
 object AllMatchFilter: Filter {
     fun toJson() = "{}"
 
@@ -102,6 +110,14 @@ class JsonFilter(
             until == null) {
             return AllMatchFilter
         }
+        if(ids?.isEmpty() == true ||
+            authors?.isEmpty() == true ||
+            kinds?.isEmpty() == true ||
+            tags?.isEmpty() == true ||
+            (since ?: Long.MIN_VALUE) > (until ?: Long.MAX_VALUE)
+        ) {
+            return NoMatchFilter
+        }
         if ((ids?.size ?: 0) + (authors?.size ?: 0) + (tags?.size ?: 0) < 10) {
             // if the filter has no compression potential, use it as is.
             return this
@@ -122,7 +138,9 @@ class JsonFilter(
         val declaredFields = JsonFilter::class.java.declaredFields.map { it.name }
         fun fromJson(json: JsonObject): JsonFilter {
             // sanity check
-            check(json.keySet().all { it.startsWith("#") || it in declaredFields })
+            if (json.keySet().any { !(it.startsWith("#") || it in declaredFields) }) {
+                println("Filter $json contains unknown parameters.")
+            }
             return JsonFilter(
                 ids = if (json.has("ids")) json.getAsJsonArray("ids").map { it.asString } else null,
                 authors = if (json.has("authors")) json.getAsJsonArray("authors")
@@ -167,14 +185,6 @@ class ProbabilisticFilter(
     private val cuckooFilter: CuckooFilter<String>
 
     init {
-        // Don't accept filters that are obviously not matching any valid Events
-        check(
-            !(ids?.isEmpty() == true ||
-                    authors?.isEmpty() == true ||
-                    kinds?.isEmpty() == true ||
-                    tags?.isEmpty() == true ||
-                    (since ?: Long.MIN_VALUE) > (until ?: Long.MAX_VALUE))
-        )
         val stringCount = (ids?.size ?: 0) +
                 (authors?.size ?: 0) +
                 (tags?.flatMap { it.value }?.size ?: 0)
@@ -233,7 +243,9 @@ class ProbabilisticFilter(
 
         fun fromJson(json: JsonObject): ProbabilisticFilter {
             // sanity check
-            check(json.keySet().all { it.startsWith("#") || it in JsonFilter.declaredFields })
+            if (json.keySet().any { !(it.startsWith("#") || it in JsonFilter.declaredFields) }) {
+                println("Filter $json contains unknown parameters.")
+            }
             return ProbabilisticFilter(
                 ids = if (json.has("ids")) json.getAsJsonArray("ids").map { it.asString } else null,
                 authors = if (json.has("authors")) json.getAsJsonArray("authors")
