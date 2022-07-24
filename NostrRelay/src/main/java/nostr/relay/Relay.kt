@@ -16,6 +16,7 @@ import nostr.relay.Events.raw
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.security.InvalidParameterException
 import java.sql.Connection
 import java.util.*
 
@@ -108,9 +109,12 @@ fun main() {
                                 .mapIndexedNotNull { index, it ->
                                     try {
                                         JsonFilter.fromJson(it.asJsonObject)
+                                    } catch (e: InvalidParameterException) {
+                                        println("Ignoring no-match filter $it")
+                                        null
                                     } catch (e: Exception) {
-                                        ctx.send("""["NOTICE","Something went wrong with filter $index on channel $channel. Ignoring. Was it a NoMatch?"]""")
-                                        println("Something went wrong with filter $index.\n${it}")
+                                        ctx.send("""["NOTICE","Something went wrong with filter $it on channel $channel. Ignoring."]""")
+                                        println("Something went wrong with filter $index. $it")
                                         null // ignore just this query
                                     }
                                 }

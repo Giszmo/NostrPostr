@@ -9,6 +9,7 @@ import com.google.gson.JsonObject
 import nostr.postr.events.Event
 import java.io.Serializable
 import java.nio.charset.Charset
+import java.security.InvalidParameterException
 import java.util.*
 
 interface Filter {
@@ -45,13 +46,15 @@ class JsonFilter(
 ) : Filter, Serializable {
     init {
         // Don't accept filters that are obviously not matching any valid Events
-        check(
-            !((ids?.isEmpty() == true ||
+        if(
+            ids?.isEmpty() == true ||
                     authors?.isEmpty() == true ||
                     kinds?.isEmpty() == true ||
                     tags?.isEmpty() == true ||
-                    (since ?: Long.MIN_VALUE) > (until ?: Long.MAX_VALUE)))
-        )
+                    (since ?: Long.MIN_VALUE) > (until ?: Long.MAX_VALUE)
+        ) {
+            throw InvalidParameterException("This filter cannot match any Events.")
+        }
     }
 
     fun toJson(): String {
