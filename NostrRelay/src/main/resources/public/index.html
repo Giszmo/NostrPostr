@@ -6,23 +6,34 @@
     </head>
     <body>
         <h1>Type queries or events to see what the relay replies</h1>
-        <textarea id="relay" placeholder="Relay" style="min-height: 1em;">wss://relay.nostr.info/</textarea>
+        <p>
+            <label for="relay">Relay:</label>
+            <select name="relay" id="relay">
+                <option value="wss://relay.nostr.info" selected>relay.nostr.info</option>
+                <option value="wss://nostr-pub.wellorder.net">nostr-pub.wellorder.net</option>
+                <option value="wss://relay.damus.io">relay.damus.io</option>
+                <option value="wss://nostr-relay.wlvs.space">nostr-relay.wlvs.space</option>
+                <option value="ws://localhost:7070">localhost:7070</option>
+            </select>
+            <span id="connectionState">Loading ...</span>
+        </p>
         <textarea id="input" placeholder="Queries or events" style="min-height: 6em;">[
     "REQ",
     "channel name",
-    {"limit":100000}
+    {"limit":1000}
 ] </textarea>
+        <p><button type="button" id="send" onClick="sendInput()">Send</button></p>
         <textarea id="output" wrap="off" style="min-height: 20em;"></textarea>
         <script>
-            window.onload = setupWebSocket;
-            window.onhashchange = setupWebSocket;
-            window.received = []
-            const relay = document.getElementById("relay");
-            relay.onkeyup = setupWebSocket
-            const input = document.getElementById("input");
-            input.onkeyup = sendInput
-            const output = document.getElementById("output");
+            const relay = document.getElementById("relay")
+            const input = document.getElementById("input")
+            const output = document.getElementById("output")
+            const connectionState = document.getElementById("connectionState")
             var ws
+
+            window.received = []
+            window.onload = setupWebSocket
+            relay.onchange = setupWebSocket
 
             function sendInput() {
                 output.value = ""
@@ -31,12 +42,25 @@
             }
 
             function setupWebSocket() {
+                if (ws) {
+                    ws.onclose = null
+                    ws.close()
+                }
+                connectionState.innerHTML = `<span class="warning">Connecting to ${relay.value}</span>`
                 ws = new WebSocket(relay.value);
                 ws.onmessage = msg => {
                     window.received.push(msg.data)
                 }
-                ws.onclose = setupWebSocket; // should reconnect if connection is closed
-                sendInput()
+                ws.onclose = () => {
+                    connectionState.innerHTML = `<span class="error">Disconnected</span>`
+                }
+                ws.onopen = () => {
+                    connectionState.innerHTML = `<span class="info">Connected to ${ws.url}</span>`
+                    sendInput()
+                }
+                ws.onerror = (e) => {
+                    connectionState.innerHTML = `<span class="error">Error (${ws.url}): ${e}</span>`
+                }
             }
 
             setInterval(() => {
@@ -81,6 +105,18 @@ ${msgs}`
                 padding: 20px;
                 font-size: 18px;
                 resize: none;
+            }
+
+            .error {
+                background-color: lightcoral;
+            }
+
+            .warning {
+                background-color: lightgray;
+            }
+
+            .info {
+                background-color: lightgreen;
             }
         </style>
     </body>

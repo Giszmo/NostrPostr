@@ -97,47 +97,23 @@ fun main() {
             ws.onConnect { ctx ->
                 subscribers[ctx] = subscribers[ctx] ?: mutableMapOf()
             }
+            ws.onClose { ctx ->
+                println("Session closing. ${ctx.reason()}")
+                subscribers.remove(ctx)
+            }
+            ws.onError { ctx ->
+                println("ws.onError(${ctx.error()?.message ?: "unknown"})")
+                subscribers.remove(ctx)
+            }
             ws.onMessage { ctx ->
                 val msg = ctx.message()
                 try {
                     val jsonArray = gson.fromJson(msg, JsonArray::class.java)
-                    when (val cmd = jsonArray[0].asString) {
-                        "REQ" -> {
-                            val channel = jsonArray[1].asString
-                            val filters = jsonArray
-                                .filterIndexed { index, _ -> index > 1 }
-                                .mapIndexedNotNull { index, it ->
-                                    try {
-                                        JsonFilter.fromJson(it.asJsonObject)
-                                    } catch (e: InvalidParameterException) {
-                                        println("Ignoring no-match filter $it")
-                                        null
-                                    } catch (e: Exception) {
-                                        ctx.send("""["NOTICE","Something went wrong with filter $it on channel $channel. Ignoring."]""")
-                                        println("Something went wrong with filter $index. $it")
-                                        null // ignore just this query
-                                    }
-                                }
-                            subscribers[ctx]!![channel] = filters.map { it.spaceOptimized() }
-                            sendEvents(channel, filters, ctx)
-                            ctx.send("""["EOSE","$channel"]""")
-                        }
-                        "EVENT" -> {
-                            try {
-                                val eventJson = jsonArray[1].asJsonObject
-                                val event = Event.fromJson(eventJson)
-                                println("WS received kind ${event.kind} event. $eventJson")
-                                processEvent(event, event.toJson(), ctx)
-                            } catch (e: Exception) {
-                                println("Something went wrong with Event: ${gson.toJson(jsonArray[1])}")
-                            }
-                        }
-                        "CLOSE" -> {
-                            val channel = jsonArray[1].asString
-                            subscribers[ctx]!!.remove(channel)
-                            println("Channel $channel closed.")
-                        }
-                        else -> ctx.send("""["NOTICE","Could not handle $cmd"]""")
+                    when (val cmd = jsonArray[0].asString ?: "") {
+                        "REQ" -> onRequest(jsonArray, ctx)
+                        "EVENT" -> onEvent(jsonArray, ctx)
+                        "CLOSE" -> onClose(jsonArray, ctx)
+                        else -> onUnknown(ctx, cmd, msg)
                     }
                 } catch (e: JsonSyntaxException) {
                     ctx.send("""["NOTICE","No valid JSON: ${gson.toJson(msg)}"]""")
@@ -145,10 +121,6 @@ fun main() {
                     ctx.send("""["NOTICE","Exceptions were thrown: ${gson.toJson(msg)}"]""")
                     println(e.message)
                 }
-            }
-            ws.onClose { ctx ->
-                println("Session closing. ${ctx.reason()}")
-                subscribers.remove(ctx)
             }
         }
     }.start("127.0.0.1", 7070)
@@ -187,6 +159,58 @@ fun main() {
                 "${subscribers.size} subscribers maintain $channelCount channels and are monitoring these queries:\n$queryUse")
         Thread.sleep(20_000)
     }
+}
+
+private fun onUnknown(ctx: WsMessageContext, cmd: String, msg: String) {
+    println("""Received unknown command "$cmd": $msg""")
+    ctx.send("""["NOTICE","Could not handle command "$cmd""]""")
+}
+
+private fun onClose(
+    jsonArray: JsonArray,
+    ctx: WsMessageContext
+) {
+    val channel = jsonArray[1].asString
+    subscribers[ctx]!!.remove(channel)
+    println("Channel $channel closed.")
+}
+
+private fun onEvent(
+    jsonArray: JsonArray,
+    ctx: WsMessageContext
+) {
+    try {
+        val eventJson = jsonArray[1].asJsonObject
+        val event = Event.fromJson(eventJson)
+        println("Websocket received kind ${event.kind} event. $eventJson")
+        processEvent(event, event.toJson(), ctx)
+    } catch (e: Exception) {
+        println("Something went wrong with Event: ${gson.toJson(jsonArray[1])}")
+    }
+}
+
+private fun onRequest(
+    jsonArray: JsonArray,
+    ctx: WsMessageContext
+) {
+    val channel = jsonArray[1].asString
+    val filters = jsonArray
+        .filterIndexed { index, _ -> index > 1 }
+        .mapIndexedNotNull { index, it ->
+            try {
+                JsonFilter.fromJson(it.asJsonObject)
+            } catch (e: InvalidParameterException) {
+                println("Ignoring no-match filter $it")
+                null
+            } catch (e: Exception) {
+                ctx.send("""["NOTICE","Something went wrong with filter $it on channel $channel. Ignoring."]""")
+                println("Something went wrong with filter $index. $it")
+                null // ignore just this query
+            }
+        }
+    subscribers[ctx]!![channel] = filters.map { it.spaceOptimized() }
+    sendEvents(channel, filters, ctx)
+    ctx.send("""["EOSE","$channel"]""")
 }
 
 private fun sendEvents(channel: String, filters: List<JsonFilter>, ctx: WsContext) {
@@ -231,31 +255,32 @@ private fun store(
     e: Event,
     eventJson: String
 ): Boolean = transaction {
+    addLogger(StdOutSqlLogger)
+    val hexId = e.id.toHex()
     try {
-        if (!DbEvent.find { hash eq e.id.toHex() }.empty()) {
+        if (!DbEvent.find { hash eq hexId }.empty()) {
             return@transaction false
         }
         e.checkSignature()
-        DbEvent.new {
-            hash = e.id.toHex()
+        val hexPubkey = e.pubKey.toHex()
+        val dbEvent = DbEvent.new {
+            hash = hexId
             raw = eventJson
             kind = e.kind
-            publicKey = e.pubKey.toHex()
+            publicKey = hexPubkey
             createdAt = e.createdAt
         }
         if (e.kind in listOf(0, 3) || e.kind in 10_000..19_999) {
             // set all but "last" to "hidden"
-            DbEvent.find {
-                (pubKey eq e.pubKey.toHex()) and (kind eq e.kind) and (Events.hidden eq false)
-            }.forEach { it.hidden = true }
-            DbEvent.find {
-                (pubKey eq e.pubKey.toHex()) and (kind eq e.kind)
-            }.orderBy(createdAt to SortOrder.DESC).first().hidden = false
+            val events = DbEvent.find { (pubKey eq hexPubkey) and (kind eq e.kind) }
+            events.forEach { it.hidden = true }
+            // set last to not hidden
+            events.orderBy(createdAt to SortOrder.DESC).first().hidden = false
         }
         e.tags.forEach { list ->
             if (list.size >= 2) {
                 DbTag.new {
-                    event = DbEvent.find { hash eq e.id.toHex() }.first().id.value
+                    event = dbEvent.id.value
                     key = list[0]
                     value = list[1]
                 }
@@ -263,7 +288,7 @@ private fun store(
         }
         true
     } catch (ex: Exception) {
-        println("Something went wrong with event ${e.id.toHex()}: ${ex.message}")
+        println("Something went wrong with event $hexId: ${ex.message}")
         false
     }
 }
@@ -273,8 +298,8 @@ private fun forward(
     eventJson: String
 ): Boolean {
     subscribers
-        .forEach { (wsContext, channelFilters) ->
-            channelFilters.forEach { (channel, filters) ->
+        .forEach { (wsContext, channels) ->
+            channels.forEach { (channel, filters) ->
                 if (filters.any { it.match(event) }) {
                     wsContext.send("""["EVENT","$channel",$eventJson]""")
                 }
