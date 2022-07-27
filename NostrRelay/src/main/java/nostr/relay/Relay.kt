@@ -102,7 +102,9 @@ fun main() {
                 subscribers.remove(ctx)
             }
             ws.onError { ctx ->
-                println("ws.onError(${ctx.error()?.message ?: "unknown"})")
+                val error = ctx.error()?.message ?: "unknown"
+                println("ws.onError($error)")
+                ctx.closeSession(2, "Error received: $error")
                 subscribers.remove(ctx)
             }
             ws.onMessage { ctx ->
@@ -255,7 +257,6 @@ private fun store(
     e: Event,
     eventJson: String
 ): Boolean = transaction {
-    addLogger(StdOutSqlLogger)
     val hexId = e.id.toHex()
     try {
         if (!DbEvent.find { hash eq hexId }.empty()) {
