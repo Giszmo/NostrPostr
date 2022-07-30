@@ -115,6 +115,7 @@ fun main() {
                         "REQ" -> onRequest(jsonArray, ctx)
                         "EVENT" -> onEvent(jsonArray, ctx)
                         "CLOSE" -> onClose(jsonArray, ctx)
+                        "RID" -> ctx.send("""["RID",${gson.toJson(featureList)}]""")
                         else -> onUnknown(ctx, cmd, msg)
                     }
                 } catch (e: JsonSyntaxException) {
