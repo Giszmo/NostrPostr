@@ -46,8 +46,8 @@ class MainActivity : AppCompatActivity() {
 
         Client.subscribe(clientListener)
         Client.lenient = true
-        val filter = Filter(
-            since = Date(1652305000)
+        val filter = JsonFilter(
+            since = 1652305L
         )
         Client.connect(mutableListOf(filter))
 

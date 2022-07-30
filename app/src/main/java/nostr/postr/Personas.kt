@@ -19,7 +19,7 @@ class PersonasRecyclerViewAdapter(context: Context, val data: MutableList<Person
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val persona = data[position]
         holder.petName.text = persona.petName ?: "Unknown"
-        holder.pubKey.text = persona.pubKey?.toHex()?.substring(0, 8)?.plus("…") ?: "?????"
+        holder.pubKey.text = persona.pubKey.toHex().substring(0, 8).plus("…")
         holder.hasPrivKey.visibility = if (persona.privKey != null) View.VISIBLE else View.INVISIBLE
     }
 
