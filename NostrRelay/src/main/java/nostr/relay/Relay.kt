@@ -3,6 +3,7 @@ package nostr.relay
 import com.google.gson.*
 import com.google.gson.reflect.TypeToken
 import io.javalin.Javalin
+import io.javalin.core.util.Header
 import io.javalin.http.staticfiles.Location
 import io.javalin.websocket.WsContext
 import io.javalin.websocket.WsMessageContext
@@ -85,6 +86,7 @@ fun main() {
             staticFiles.directory = "/public"
             staticFiles.location = Location.CLASSPATH
         }
+        it.enableCorsForAllOrigins()
     }.apply {
         get("/") {
             if (it.header("Accept") == "application/nostr+json") {
