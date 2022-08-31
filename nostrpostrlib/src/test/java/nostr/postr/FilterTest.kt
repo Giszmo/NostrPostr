@@ -2,6 +2,7 @@ package nostr.postr
 
 import nostr.postr.events.Event
 import nostr.postr.events.EventTest
+import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
@@ -85,6 +86,86 @@ internal class FilterTest {
         val json = "{}"
         val filter = JsonFilter()
         assertEquals(json, filter.toJson())
+    }
+
+    @Test
+    fun spaceOptimizedProbabilisticFilter() {
+        val ids = (1..10).map { Persona().pubKey.toHex() }
+        val authors = (1..10).map { Persona().pubKey.toHex() }
+        val tags = mapOf(
+            "e" to (1..2).map { Persona().pubKey.toHex() },
+            "p" to (1..2).map { Persona().pubKey.toHex() },
+            "a" to (1..2).map { Persona().pubKey.toHex() },
+            "b" to (1..2).map { Persona().pubKey.toHex() },
+            "c" to (1..2).map { Persona().pubKey.toHex() }
+        )
+        val jsonFilters = listOf(
+            JsonFilter(ids = ids),
+            JsonFilter(authors = authors),
+            JsonFilter(authors = authors, kinds = listOf(1)),
+            JsonFilter(tags = tags),
+            JsonFilter(ids = ids, authors = authors, tags = tags)
+        )
+        jsonFilters.forEach {
+            val optimized = it.spaceOptimized()
+            Assertions.assertTrue(optimized is ProbabilisticFilter) { "Should have turned into ProbabilisticFilter: ${it.toJson()}" }
+        }
+    }
+
+    @Test
+    fun spaceOptimizedNoMatchFilter() {
+        val tags = mapOf(
+            "e" to emptyList(),
+            "f" to listOf("A")
+        )
+        val jsonFilters = listOf(
+            JsonFilter(ids = emptyList()),
+            JsonFilter(authors = emptyList()),
+            JsonFilter(tags = tags),
+            JsonFilter(since = 5000, until = 4000),
+            JsonFilter(
+                ids = emptyList(),
+                authors = emptyList(),
+                tags = tags,
+                since = 5000,
+                until = 4000
+            )
+        )
+        jsonFilters.forEach {
+            val optimized = it.spaceOptimized()
+            Assertions.assertTrue(optimized is NoMatchFilter) { "Should have turned into NoMatchFilter: ${it.toJson()}" }
+        }
+    }
+
+    @Test
+    fun spaceOptimizedAllMatchFilter() {
+        val filter = JsonFilter()
+        val optimized = filter.spaceOptimized()
+        Assertions.assertTrue(optimized is AllMatchFilter) {
+            "Should have turned into AllMatchFilter: ${filter.toJson()}"
+        }
+    }
+
+    @Test
+    fun spaceOptimizedJsonFilter() {
+        val ids = (1..9).map { Persona().pubKey.toHex() }
+        val authors = (1..9).map { Persona().pubKey.toHex() }
+        val tags = mapOf(
+            "e" to (1..2).map { Persona().pubKey.toHex() },
+            "p" to (1..2).map { Persona().pubKey.toHex() },
+            "a" to (1..2).map { Persona().pubKey.toHex() },
+            "b" to (1..2).map { Persona().pubKey.toHex() }
+        )
+        val jsonFilters = listOf(
+            JsonFilter(ids = ids),
+            JsonFilter(authors = authors),
+            JsonFilter(tags = tags),
+            JsonFilter(since = 5, until = 35, limit = 0, kinds = listOf(1, 2, 3))
+        )
+        jsonFilters.forEach {
+            val optimized = it.spaceOptimized()
+            Assertions.assertTrue(optimized is JsonFilter) { "Should have turned into JsonFilter: ${it.toJson()}" }
+        }
     }
 
     companion object {

@@ -3,7 +3,6 @@ package nostr.relay
 import com.google.gson.*
 import com.google.gson.reflect.TypeToken
 import io.javalin.Javalin
-import io.javalin.core.util.Header
 import io.javalin.http.staticfiles.Location
 import io.javalin.websocket.WsContext
 import io.javalin.websocket.WsMessageContext
@@ -76,6 +75,7 @@ fun main() {
         SchemaUtils.createMissingTablesAndColumns(Events, Tags)
     }
     Javalin.create {
+        it.enableCorsForAllOrigins()
         it.maxRequestSize = 1 * 1024 * 1024
         it.asyncRequestTimeout = 5L * 60L * 60L * 1_000L
         it.wsFactoryConfig {
@@ -86,7 +86,6 @@ fun main() {
             staticFiles.directory = "/public"
             staticFiles.location = Location.CLASSPATH
         }
-        it.enableCorsForAllOrigins()
     }.apply {
         get("/") {
             if (it.header("Accept") == "application/nostr+json") {

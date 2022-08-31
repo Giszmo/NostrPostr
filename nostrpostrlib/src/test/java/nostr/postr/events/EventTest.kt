@@ -3,17 +3,13 @@ package nostr.postr.events
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
-import org.spongycastle.util.encoders.Hex
-import java.lang.Exception
 import java.util.stream.Collectors
 import java.util.stream.Stream
-import kotlin.streams.toList
 
 class EventTest {
     @ParameterizedTest @MethodSource("provideAnyKindEventJson")
     fun fromToJson(eventJson: String) {
         check(eventJson.isNotEmpty())
-        // val eventJsonActual =
         Event.fromJson(eventJson).toJson()
         // The order of event members is not determined or relevant.
         // Reproducibility of the serialized form is not required.

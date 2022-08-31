@@ -9,7 +9,6 @@ import com.google.gson.JsonObject
 import nostr.postr.events.Event
 import java.io.Serializable
 import java.nio.charset.Charset
-import java.security.InvalidParameterException
 import java.util.*
 
 interface Filter {
@@ -44,19 +43,6 @@ class JsonFilter(
     val until: Long? = null,
     val limit: Int? = null
 ) : Filter, Serializable {
-    init {
-        // Don't accept filters that are obviously not matching any valid Events
-        if(
-            ids?.isEmpty() == true ||
-                    authors?.isEmpty() == true ||
-                    kinds?.isEmpty() == true ||
-                    tags?.isEmpty() == true ||
-                    (since ?: Long.MIN_VALUE) > (until ?: Long.MAX_VALUE)
-        ) {
-            throw InvalidParameterException("This filter cannot match any Events.")
-        }
-    }
-
     fun toJson(): String {
         val jsonObject = JsonObject()
         ids?.run {
@@ -116,12 +102,12 @@ class JsonFilter(
         if(ids?.isEmpty() == true ||
             authors?.isEmpty() == true ||
             kinds?.isEmpty() == true ||
-            tags?.isEmpty() == true ||
+            tags?.any { it.value.isEmpty() } == true ||
             (since ?: Long.MIN_VALUE) > (until ?: Long.MAX_VALUE)
         ) {
             return NoMatchFilter
         }
-        if ((ids?.size ?: 0) + (authors?.size ?: 0) + (tags?.size ?: 0) < 10) {
+        if ((ids?.size ?: 0) + (authors?.size ?: 0) + (tags?.map { it.value.size }?.sum() ?: 0) < 10) {
             // if the filter has no compression potential, use it as is.
             return this
         }
@@ -182,9 +168,9 @@ class ProbabilisticFilter(
     val limit: Int? = null,
     falsePositiveRate: Double = 1.0 / 10_000_000
 ) : Filter, Serializable {
-    val ids: Boolean
-    val authors: Boolean
-    val tags: Boolean
+    val ids: Int
+    val authors: Int
+    val tags: Int
     private val cuckooFilter: CuckooFilter<String>
 
     init {
@@ -210,16 +196,16 @@ class ProbabilisticFilter(
                 cuckooFilter.put("#$k/$it")
             }
         }
-        this.ids = ids != null
-        this.authors = authors != null
-        this.tags = tags != null
+        this.ids = ids?.size ?: 0
+        this.authors = authors?.size ?: 0
+        this.tags = tags?.map{ it.value.size }?.sum() ?: 0
     }
 
     override fun match(event: Event): Boolean {
-        if (ids && !cuckooFilter.mightContain("e/${event.id.toHex()}")) return false
+        if (ids > 0 && !cuckooFilter.mightContain("e/${event.id.toHex()}")) return false
         if (kinds?.any { event.kind == it } == false) return false
-        if (authors && !cuckooFilter.mightContain("p/${event.pubKey.toHex()}")) return false
-        if (tags && event.tags.all { !cuckooFilter.mightContain("#${it.first()}/${it[1]}") }) return false
+        if (authors > 0 && !cuckooFilter.mightContain("p/${event.pubKey.toHex()}")) return false
+        if (tags > 0 && event.tags.all { !cuckooFilter.mightContain("#${it.first()}/${it[1]}") }) return false
         if (event.createdAt !in (since ?: Long.MIN_VALUE)..(until ?: Long.MAX_VALUE))
             return false
         return true
@@ -228,9 +214,9 @@ class ProbabilisticFilter(
     override fun toString(): String {
         return "ProbabilisticFilter( " +
                 (kinds?.let { "kinds: [${it.joinToString()}] " } ?: "") +
-                (if (ids) "ids " else "") +
-                (if (authors) "authors " else "") +
-                (if (tags) "tags " else "") +
+                (if (ids > 0) "$ids*ids " else "") +
+                (if (authors > 0) "$authors*authors " else "") +
+                (if (tags > 0) "$tags*tags " else "") +
                 (since?.let { "after: ${Date(it * 1000)} " } ?: "") +
                 (until?.let { "until: ${Date(it * 1000)} " } ?: "") +
                 ")"
