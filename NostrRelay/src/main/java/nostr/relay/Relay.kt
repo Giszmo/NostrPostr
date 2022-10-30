@@ -159,7 +159,7 @@ fun main() {
             .map { it to Collections.frequency(queries, it) }
             .sortedBy { - it.second }
             .joinToString("\n") { "${it.second} times ${it.first}" }
-        println("${Date()}: pinging all sockets. ${rt.freeMemory() / 1024 / 1024}MB / ${rt.totalMemory() / 1024 / 1024}MB free. " +
+        println("\n\n${Date()}: pinging all sockets. ${rt.freeMemory() / 1024 / 1024}MB / ${rt.totalMemory() / 1024 / 1024}MB free. " +
                 "${subscribers.size} subscribers maintain $channelCount channels and are monitoring these queries:\n$queryUse")
         Thread.sleep(20_000)
     }
