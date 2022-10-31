@@ -24,7 +24,12 @@ class SendStuff {
             println("""Persona(privKey:${persona.privKey!!.toHex()}, pubKey:${persona.pubKey.toHex()})""")
             Client.subscribe(listener)
             Client.connect(mutableListOf(JsonFilter(
-                authors = listOf(persona.pubKey.toHex()))))
+                authors = listOf(persona.pubKey.toHex()))), arrayOf(Relay("ws://127.0.0.1:7070/",
+                read = true,
+                write = true
+            )))
+            val event = Event.create(persona.privKey!!, 35_000, listOf())
+            Client.send(event)
 
 //            val metaData = ContactMetaData("NostrPostr Testr", "http://www.makolkin.ru/Gallery/120930/Moon_120930_TAL-250K_IR_VAC136_dvmak001.jpg", "Just an account to play with NOSTR", null)
 //            val event = MetadataEvent.create(metaData, persona.privateKey!!)

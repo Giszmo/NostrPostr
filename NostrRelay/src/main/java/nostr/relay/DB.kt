@@ -14,6 +14,7 @@ object Events : IntIdTable() {
     val createdAt = long("createdAt")
     val hidden = bool("hidden").default(false)
     val firstSeen = long("firstSeen").default(System.currentTimeMillis())
+    val dTag = text("dTag").nullable().index()
 }
 
 class DbEvent(id: EntityID<Int>) : Entity<Int>(id) {
@@ -26,6 +27,7 @@ class DbEvent(id: EntityID<Int>) : Entity<Int>(id) {
     var createdAt by Events.createdAt
     var hidden by Events.hidden
     var firstSeen by Events.firstSeen
+    var dTag by Events.dTag
 }
 
 object Tags : IntIdTable() {

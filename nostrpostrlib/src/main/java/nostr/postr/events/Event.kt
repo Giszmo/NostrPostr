@@ -3,11 +3,13 @@ package nostr.postr.events
 import com.google.gson.*
 import com.google.gson.annotations.SerializedName
 import fr.acinq.secp256k1.Secp256k1
+import nostr.postr.Utils
 import nostr.postr.toHex
 import org.spongycastle.util.encoders.Hex
 import java.lang.Exception
 import java.lang.reflect.Type
 import java.security.MessageDigest
+import java.util.*
 
 open class Event(
     val id: ByteArray,
@@ -143,6 +145,13 @@ open class Event(
             )
             val rawEventJson = gson.toJson(rawEvent)
             return sha256.digest(rawEventJson.toByteArray())
+        }
+
+        fun create(privateKey: ByteArray, kind: Int, tags: List<List<String>> = emptyList(), content: String = "", createdAt: Long = Date().time / 1000): Event {
+            val pubKey = Utils.pubkeyCreate(privateKey)
+            val id = Companion.generateId(pubKey, createdAt, kind, tags, content)
+            val sig = Utils.sign(id, privateKey)
+            return Event(id, pubKey, createdAt, kind, tags, content, sig)
         }
     }
 }

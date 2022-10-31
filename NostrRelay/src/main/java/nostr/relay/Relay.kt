@@ -9,6 +9,7 @@ import io.javalin.websocket.WsMessageContext
 import nostr.postr.*
 import nostr.postr.events.Event
 import nostr.relay.Events.createdAt
+import nostr.relay.Events.dTag
 import nostr.relay.Events.hash
 import nostr.relay.Events.kind
 import nostr.relay.Events.pubKey
@@ -31,9 +32,9 @@ val featureList = mapOf(
     "name" to "NostrPostrRelay",
     "description" to "Relay running NostrPostr by https://nostr.info",
     "pubkey" to "46fcbe3065eaf1ae7811465924e48923363ff3f526bd6f73d7c184b16bd8ce4d",
-    "supported_nips" to listOf(1, 2, 9, 11, 12, 15, 16),
+    "supported_nips" to listOf(1, 2, 9, 11, 12, 15, 16, 33),
     "software" to "https://github.com/Giszmo/NostrPostr",
-    "version" to "0"
+    "version" to "1"
 )
 
 class NostrRelay
@@ -260,6 +261,7 @@ private fun store(
     eventJson: String
 ): Boolean = transaction {
     val hexId = e.id.toHex()
+    val firstDTag = e.tags.firstOrNull { it.first() == "d" }?.getOrNull(1) ?: ""
     try {
         if (!DbEvent.find { hash eq hexId }.empty()) {
             return@transaction false
@@ -272,10 +274,24 @@ private fun store(
             kind = e.kind
             publicKey = hexPubkey
             createdAt = e.createdAt
+            dTag = if (e.kind in 30_000..39_999) {
+                firstDTag
+            } else {
+                null
+            }
         }
         if (e.kind in listOf(0, 3) || e.kind in 10_000..19_999) {
             // set all but "last" to "hidden"
             val events = DbEvent.find { (pubKey eq hexPubkey) and (kind eq e.kind) }
+            events.forEach { it.hidden = true }
+            // set last to not hidden
+            events.orderBy(createdAt to SortOrder.DESC).first().hidden = false
+        }
+        if (e.kind in 30_000..39_999) {
+            // set all but "last" to "hidden" considering the first d-tag as per nip33
+            val events = DbEvent.find {
+                (pubKey eq hexPubkey) and (kind eq e.kind) and (dTag eq firstDTag)
+            }
             events.forEach { it.hidden = true }
             // set last to not hidden
             events.orderBy(createdAt to SortOrder.DESC).first().hidden = false
@@ -285,7 +301,7 @@ private fun store(
                 DbTag.new {
                     event = dbEvent.id.value
                     key = list[0]
-                    value = list[1]
+                    value = list.getOrNull(1) ?: ""
                 }
             }
         }
