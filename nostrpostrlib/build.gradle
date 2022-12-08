@@ -1,6 +1,20 @@
 apply plugin: 'java'
 apply plugin: 'kotlin'
 
+static String target() {
+    {
+        def currentOs = System.getProperty("os.name")
+        if (currentOs.containsIgnoreCase("Mac")) {
+            return "darwin"
+        } else if (currentOs.containsIgnoreCase("Windows")) {
+            return "mingw"
+        } else {
+            return "linux"
+        }
+    }
+}
+def currentOs = target()
+
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'com.squareup.retrofit2:retrofit:2.8.1'
@@ -8,13 +22,14 @@ dependencies {
     implementation 'com.squareup.okhttp3:okhttp:4.9.3'
     implementation 'com.madgag.spongycastle:core:1.51.0.0'
     implementation 'com.madgag.spongycastle:prov:1.51.0.0'
-    implementation 'fr.acinq.secp256k1:secp256k1-kmp-jvm:0.6.4'
-    runtimeOnly 'fr.acinq.secp256k1:secp256k1-kmp-jni-jvm:0.6.4'
+    implementation 'fr.acinq.secp256k1:secp256k1-kmp:0.6.4'
+
     implementation 'com.github.mgunlogson:cuckoofilter4j:1.0.1'
 
+    //runtimeOnly 'fr.acinq.secp256k1:secp256k1-kmp-jni-jvm:0.6.4'
     testImplementation "org.junit.jupiter:junit-jupiter:5.8.2"
     testImplementation "org.junit.jupiter:junit-jupiter-params:5.8.2"
-    runtimeOnly 'fr.acinq.secp256k1:secp256k1-kmp-jni-jvm:0.6.4'
+    testRuntimeOnly "fr.acinq.secp256k1:secp256k1-kmp-jni-jvm-$currentOs:0.6.4"
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:5.8.2"
     testRuntimeOnly "org.junit.vintage:junit-vintage-engine:5.8.2"
 }
