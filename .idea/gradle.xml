@@ -14,6 +14,7 @@
             <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/bip-schnorr-kotlin" />
             <option value="$PROJECT_DIR$/examples" />
+            <option value="$PROJECT_DIR$/nostrpostr-android" />
             <option value="$PROJECT_DIR$/nostrpostrlib" />
           </set>
         </option>
