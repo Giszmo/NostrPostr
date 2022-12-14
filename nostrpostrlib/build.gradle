@@ -30,8 +30,7 @@ dependencies {
 
     testImplementation "org.junit.jupiter:junit-jupiter:5.8.2"
     testImplementation "org.junit.jupiter:junit-jupiter-params:5.8.2"
-    runtimeOnly "fr.acinq.secp256k1:secp256k1-kmp-jni-jvm-linux:0.6.4"
-    //testRuntimeOnly "fr.acinq.secp256k1:secp256k1-kmp-jni-jvm-linux:0.6.4"
+    runtimeOnly "fr.acinq.secp256k1:secp256k1-kmp-jni-jvm-$currentOs:0.6.4"
     testRuntimeOnly "fr.acinq.secp256k1:secp256k1-kmp-jni-jvm-$currentOs:0.6.4"
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:5.8.2"
     testRuntimeOnly "org.junit.vintage:junit-vintage-engine:5.8.2"
