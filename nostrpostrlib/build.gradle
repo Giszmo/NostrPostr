@@ -1,20 +1,6 @@
 apply plugin: 'java-library'
 apply plugin: 'kotlin'
 
-static String target() {
-    {
-        def currentOs = System.getProperty("os.name")
-        if (currentOs.containsIgnoreCase("Mac")) {
-            return "darwin"
-        } else if (currentOs.containsIgnoreCase("Windows")) {
-            return "mingw"
-        } else {
-            return "linux"
-        }
-    }
-}
-def currentOs = target()
-
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'com.squareup.retrofit2:retrofit:2.8.1'
@@ -26,7 +12,7 @@ dependencies {
 
     implementation 'com.github.mgunlogson:cuckoofilter4j:1.0.1'
 
-    //runtimeOnly 'fr.acinq.secp256k1:secp256k1-kmp-jni-jvm:0.6.4'
+
     testImplementation "org.junit.jupiter:junit-jupiter:5.8.2"
     testImplementation "org.junit.jupiter:junit-jupiter-params:5.8.2"
     //testRuntimeOnly "fr.acinq.secp256k1:secp256k1-kmp-jni-jvm-$currentOs:0.6.4"

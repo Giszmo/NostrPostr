@@ -44,7 +44,7 @@ dependencies {
     implementation 'androidx.navigation:navigation-fragment-ktx:2.5.1'
     implementation 'androidx.navigation:navigation-ui-ktx:2.5.1'
     implementation project(path: ':nostrpostrlib')
-    implementation 'fr.acinq.secp256k1:secp256k1-kmp-jvm:0.6.4'
+    //implementation 'fr.acinq.secp256k1:secp256k1-kmp-jvm:0.6.4'
     implementation 'fr.acinq.secp256k1:secp256k1-kmp-jni-android:0.6.4'
     implementation "androidx.room:room-ktx:2.4.3"
     // WTF: https://stackoverflow.com/a/60492942/969478

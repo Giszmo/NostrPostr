@@ -6,6 +6,20 @@ java {
     targetCompatibility = JavaVersion.VERSION_11
 }
 
+static String target() {
+    {
+        def currentOs = System.getProperty("os.name")
+        if (currentOs.containsIgnoreCase("Mac")) {
+            return "darwin"
+        } else if (currentOs.containsIgnoreCase("Windows")) {
+            return "mingw"
+        } else {
+            return "linux"
+        }
+    }
+}
+def currentOs = target()
+
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.2"
@@ -14,6 +28,8 @@ dependencies {
     implementation 'org.junit.jupiter:junit-jupiter:5.8.2'
     implementation 'com.madgag.spongycastle:core:1.51.0.0'
     implementation 'com.madgag.spongycastle:prov:1.51.0.0'
+
+    runtimeOnly "fr.acinq.secp256k1:secp256k1-kmp-jni-jvm-$currentOs:0.6.4"
 }
 
 tasks.test {
