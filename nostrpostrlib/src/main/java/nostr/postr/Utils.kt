@@ -24,8 +24,11 @@ object Utils {
     fun pubkeyCreate(privKey: ByteArray) =
         secp256k1.pubKeyCompress(secp256k1.pubkeyCreate(privKey)).copyOfRange(1, 33)
 
-    fun sign(data: ByteArray, privKey: ByteArray): ByteArray =
-        secp256k1.signSchnorr(data, privKey, null)
+    fun sign(data: ByteArray, privKey: ByteArray): ByteArray {
+        val randomness = ByteArray(32)
+        random.nextBytes(randomness)
+        return secp256k1.signSchnorr(data, privKey, randomness)
+    }
 
     fun encrypt(msg: String, privateKey: ByteArray, pubKey: ByteArray): String {
         val sharedSecret = getSharedSecret(privateKey, pubKey)
