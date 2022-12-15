@@ -37,14 +37,4 @@ internal class UtilsTest {
         assertArrayEquals(sharedSecretExpected, sharedSecretAliceToBob)
         assertArrayEquals(sharedSecretExpected, sharedSecretBobToAlice)
     }
-
-    @Test
-    fun convertPubkeyHexToNpub(){
-        val pubkeyHex = "e4c47aedea8ea54255f5ba07a77053b24553e9b975435e56da343da19aec7881"
-        val keyInBytes = Hex.decode(pubkeyHex)
-        val npubRepresentation = keyInBytes.toNpub()
-        val correctRep = "npub1unz84m0236j5y404hgr6wuznkfz486dew4p4u4k6xs76rxhv0zqsq9q6t8"
-        assertEquals(correctRep, npubRepresentation)
-
-    }
 }

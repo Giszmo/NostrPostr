@@ -79,6 +79,3 @@ fun Int.toByteArray(): ByteArray {
     }
     return bytes
 }
-
-fun ByteArray.toNsec() = Bech32.encodeBytes(hrp = "nsec", this, Bech32.Encoding.Bech32)
-fun ByteArray.toNpub() = Bech32.encodeBytes(hrp = "npub", this, Bech32.Encoding.Bech32)
