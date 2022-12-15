@@ -52,4 +52,5 @@ internal class UtilsTest {
         assertEquals(correctJackNpub, derivedJackNpub)
 
     }
+
 }
