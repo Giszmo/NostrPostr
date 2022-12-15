@@ -47,14 +47,6 @@ public object Bech32 {
         }
     }
 
-//    @JvmStatic
-//    public fun hrp(chainHash: ByteVector32): String = when (chainHash) {
-//        Block.TestnetGenesisBlock.hash -> "tb"
-//        Block.SignetGenesisBlock.hash -> "tb"
-//        Block.RegtestGenesisBlock.hash -> "bcrt"
-//        Block.LivenetGenesisBlock.hash -> "bc"
-//        else -> error("invalid chain hash $chainHash")
-//    }
 
     private fun expand(hrp: String): Array<Int5> {
         val result = Array<Int5>(hrp.length + 1 + hrp.length) { 0 }
@@ -207,47 +199,5 @@ public object Bech32 {
         require((buffer and ((1L shl count) - 1L)) == 0L) { "Non-zero padding in 8-to-5 conversion" }
         return output.toByteArray()
     }
-
-//    /**
-//     * encode a bitcoin witness address
-//     * @param hrp should be "bc" or "tb"
-//     * @param witnessVersion witness version (0 to 16)
-//     * @param data witness program: if version is 0, either 20 bytes (P2WPKH) or 32 bytes (P2WSH)
-//     * @return a bech32 encoded witness address
-//     */
-//    @JvmStatic
-//    public fun encodeWitnessAddress(hrp: String, witnessVersion: Byte, data: ByteArray): String {
-//        require(witnessVersion in 0..16) { "invalid segwit version" }
-//        val encoding = when (witnessVersion) {
-//            0.toByte() -> Encoding.Bech32
-//            else -> Encoding.Bech32m
-//        }
-//        val data1 = arrayOf(witnessVersion) + eight2five(data)
-//        val checksum = checksum(hrp, data1, encoding)
-//        val chars = (data1 + checksum).map { i -> alphabet[i.toInt()] }
-//        val sb = StringBuilder()
-//        for (c in chars) sb.append(c)
-//        return hrp + "1" + sb.toString()
-//    }
-//
-//    /**
-//     * decode a bitcoin witness address
-//     * @param address witness address
-//     * @return a (prefix, version, program) tuple where prefix is the human-readable prefix, version is the witness version and program the decoded witness program.
-//     *         If version is 0, it will be either 20 bytes (P2WPKH) or 32 bytes (P2WSH).
-//     */
-//    @JvmStatic
-//    public fun decodeWitnessAddress(address: String): Triple<String, Byte, ByteArray> {
-//        val (hrp, data, encoding) = decode(address)
-//        require(hrp == "bc" || hrp == "tb" || hrp == "bcrt") { "invalid HRP $hrp" }
-//        val version = data[0]
-//        require(version in 0..16) { "invalid segwit version" }
-//        val bin = five2eight(data, 1)
-//        require(bin.size in 2..40) { "invalid witness program length ${bin.size}" }
-//        if (version == 0.toByte()) require(encoding == Encoding.Bech32) { "version 0 must be encoded with Bech32" }
-//        if (version == 0.toByte()) require(bin.size == 20 || bin.size == 32) { "invalid witness program length ${bin.size}" }
-//        if (version != 0.toByte()) require(encoding == Encoding.Bech32m) { "version 1 to 16 must be encoded with Bech32m" }
-//        return Triple(hrp, version, bin)
-//    }
 
 }
