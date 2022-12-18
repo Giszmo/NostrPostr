@@ -109,7 +109,7 @@ fun main() {
             }
             ws.onError { ctx ->
                 val error = ctx.error()?.message ?: "unknown"
-                println("ws.onError($error)")
+                println("ws.onError(${ctx.error()})")
                 ctx.closeSession(2, "Error received: $error")
                 subscribers.remove(ctx)
             }
@@ -128,7 +128,7 @@ fun main() {
                     ctx.send("""["NOTICE","No valid JSON: ${gson.toJson(msg)}"]""")
                 } catch (e: Exception) {
                     ctx.send("""["NOTICE","Exceptions were thrown: ${gson.toJson(msg)}"]""")
-                    println(e.message)
+                    println("Exception on ws message: ${e.stackTrace}")
                 }
             }
         }
@@ -201,10 +201,10 @@ private fun onEvent(
     try {
         val eventJson = jsonArray[1].asJsonObject
         val event = Event.fromJson(eventJson)
-        println("Websocket received kind ${event.kind} event ${event.id}.")
+        println("Websocket received kind ${event.kind} event ${event.id.toHex()}.")
         processEvent(event, event.toJson(), ctx)
     } catch (e: Exception) {
-        println("Something went wrong with Event: ${gson.toJson(jsonArray[1])}")
+        println("Something went wrong with Event: ${gson.toJson(jsonArray[1])}\n$e")
     }
 }
 
