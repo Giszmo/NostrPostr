@@ -10,15 +10,21 @@ import nostr.postr.events.Event
 import java.io.Serializable
 import java.nio.charset.Charset
 import java.util.*
+import kotlin.math.ceil
+import kotlin.math.log10
+import kotlin.math.pow
 
 interface Filter {
     fun match(event: Event): Boolean
+    fun toShortString(): String
 }
 
 object NoMatchFilter: Filter {
     fun toJson() = """{"ids":[]}"""
 
     override fun toString() = "NoMatchFilter"
+
+    override fun toShortString() = toString()
 
     override fun match(event: Event) = false
 }
@@ -27,6 +33,8 @@ object AllMatchFilter: Filter {
     fun toJson() = "{}"
 
     override fun toString() = "AllMatchFilter"
+
+    override fun toShortString() = toString()
 
     override fun match(event: Event) = true
 }
@@ -115,6 +123,32 @@ class JsonFilter(
     }
 
     override fun toString(): String = "JsonFilter${toJson()}"
+
+    override fun toShortString(): String {
+        val list = ArrayList<String>()
+        ids?.run {
+            list.add("ids")
+        }
+        authors?.run {
+            list.add("authors")
+        }
+        kinds?.run {
+            list.add("kinds[${kinds.joinToString()}]")
+        }
+        tags?.run {
+            list.add("tags")
+        }
+        since?.run {
+            list.add("since")
+        }
+        until?.run {
+            list.add("until")
+        }
+        limit?.run {
+            list.add("limit")
+        }
+        return list.joinToString()
+    }
 
     companion object {
         val gson: Gson = GsonBuilder().create()
@@ -211,19 +245,26 @@ class ProbabilisticFilter(
         return true
     }
 
-    override fun toString(): String {
+    override fun toString() = "ProbabilisticFilter( " +
+            (kinds?.let { "kinds: [${it.joinToString()}] " } ?: "") +
+            (if (ids > 0) "$ids*ids " else "") +
+            (if (authors > 0) "$authors*authors " else "") +
+            (if (tags > 0) "$tags*tags " else "") +
+            (since?.let { "after: ${Date(it * 1000)} " } ?: "") +
+            (until?.let { "until: ${Date(it * 1000)} " } ?: "") +
+            ")"
+
+    override fun toShortString(): String {
         return "ProbabilisticFilter( " +
-                (kinds?.let { "kinds: [${it.joinToString()}] " } ?: "") +
-                (if (ids > 0) "$ids*ids " else "") +
-                (if (authors > 0) "$authors*authors " else "") +
-                (if (tags > 0) "$tags*tags " else "") +
-                (since?.let { "after: ${Date(it * 1000)} " } ?: "") +
-                (until?.let { "until: ${Date(it * 1000)} " } ?: "") +
+            (kinds?.let { "kinds: [${it.joinToString()}] " } ?: "") +
+                "ids/authors/tags: ${10.0.pow(ceil(log10((ids + authors + tags).toDouble()))).toInt()}s" +
+                (since?.let { "after " } ?: "") +
+                (until?.let { "until " } ?: "") +
                 ")"
     }
 
     companion object {
-        val gson = GsonBuilder().create()
+        val gson: Gson = GsonBuilder().create()
 
         fun fromJson(json: String): ProbabilisticFilter {
             val jsonFilter = gson.fromJson(json, JsonObject::class.java)

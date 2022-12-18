@@ -6,6 +6,7 @@ import io.javalin.Javalin
 import io.javalin.http.staticfiles.Location
 import io.javalin.websocket.WsContext
 import io.javalin.websocket.WsMessageContext
+import jdk.nashorn.internal.parser.DateParser.DAY
 import nostr.postr.*
 import nostr.postr.events.Event
 import nostr.relay.Events.createdAt
@@ -36,6 +37,8 @@ val featureList = mapOf(
     "software" to "https://github.com/Giszmo/NostrPostr",
     "version" to "1"
 )
+
+var eventTiming = 0 to 0
 
 class NostrRelay
 
@@ -142,7 +145,7 @@ fun main() {
     val filter = if(config["fullSync"] == "true") {
         JsonFilter()
     } else {
-        JsonFilter(since = Calendar.getInstance().apply { add(Calendar.HOUR, -24) }.time.time / 1000)
+        JsonFilter(since = Calendar.getInstance().apply { add(Calendar.HOUR, -7 * 24) }.time.time / 1000)
     }
     Client.connect(mutableListOf(filter))
     while (true) {
@@ -151,7 +154,7 @@ fun main() {
             .values
             .flatMap { it.values }
             .flatten()
-            .map { it.toString() }
+            .map { it.toShortString() }
         val channelCount = subscribers
             .values
             .count()
@@ -160,9 +163,15 @@ fun main() {
             .map { it to Collections.frequency(queries, it) }
             .sortedBy { - it.second }
             .joinToString("\n") { "${it.second} times ${it.first}" }
-        println("\n\n${Date()}: pinging all sockets. ${rt.freeMemory() / 1024 / 1024}MB / ${rt.totalMemory() / 1024 / 1024}MB free. " +
-                "${subscribers.size} subscribers maintain $channelCount channels and are monitoring these queries:\n$queryUse")
-        Thread.sleep(20_000)
+        println("""
+            
+            ${Date()}: pinging all sockets. ${rt.freeMemory() / 1024 / 1024}MB / ${rt.totalMemory() / 1024 / 1024}MB free.
+            ${subscribers.size} subscribers maintain $channelCount channels and are monitoring these queries:
+            $queryUse
+            ${eventTiming.first} Events sent in ${eventTiming.second}ms
+            """.trimIndent())
+        eventTiming = 0 to 0
+        Thread.sleep(10_000)
     }
 }
 
@@ -240,7 +249,7 @@ private fun sendEvents(channel: String, filters: List<JsonFilter>, ctx: WsContex
     rawEvents.forEach {
         ctx.send("""["EVENT","$channel",$it]""")
     }
-    println("${rawEvents.size} Events sent in ${System.currentTimeMillis() - t}ms.")
+    eventTiming = eventTiming.first + rawEvents.size to eventTiming.second + (System.currentTimeMillis() - t).toInt()
 }
 
 private fun processEvent(e: Event, eventJson: String, sender: WsMessageContext? = null): Boolean {
