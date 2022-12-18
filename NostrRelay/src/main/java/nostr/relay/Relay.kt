@@ -284,6 +284,7 @@ private fun store(
     val firstDTag = e.tags.firstOrNull { it.first() == "d" }?.getOrNull(1) ?: ""
     try {
         if (!DbEvent.find { hash eq hexId }.empty()) {
+            println("Skipping duplicate event $hexId")
             return@transaction false
         }
         e.checkSignature()
@@ -317,7 +318,7 @@ private fun store(
             events.orderBy(createdAt to SortOrder.DESC).first().hidden = false
         }
         e.tags.forEach { list ->
-            if (list.size >= 2) {
+            if (list.size >= 2 && list[0].length <= 20) {
                 DbTag.new {
                     event = dbEvent.id.value
                     key = list[0]
