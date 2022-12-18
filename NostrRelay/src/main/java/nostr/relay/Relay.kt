@@ -40,6 +40,7 @@ val featureList = mapOf(
 var eventTiming = 0 to 0
 var channelCloseCounter = 0
 var sessionCloseCounter = 0
+var eventReceived = 0
 
 class NostrRelay
 
@@ -128,7 +129,8 @@ fun main() {
                     ctx.send("""["NOTICE","No valid JSON: ${gson.toJson(msg)}"]""")
                 } catch (e: Exception) {
                     ctx.send("""["NOTICE","Exceptions were thrown: ${gson.toJson(msg)}"]""")
-                    println("Exception on ws message: ${e.stackTrace}")
+                    println("Exception on ws message:")
+                    e.printStackTrace()
                 }
             }
         }
@@ -146,7 +148,8 @@ fun main() {
     val filter = if(config["fullSync"] == "true") {
         JsonFilter()
     } else {
-        JsonFilter(since = Calendar.getInstance().apply { add(Calendar.HOUR, -7 * 24) }.time.time / 1000)
+        // to cover even extended down-times automatically
+        JsonFilter(since = Calendar.getInstance().apply { add(Calendar.HOUR, -6) }.time.time / 1000)
     }
     Client.connect(mutableListOf(filter))
     while (true) {
@@ -169,13 +172,15 @@ fun main() {
             ${Date()}: pinging all sockets. ${rt.freeMemory() / 1024 / 1024}MB / ${rt.totalMemory() / 1024 / 1024}MB free.
             ${subscribers.size} subscribers maintain $channelCount channels and are monitoring these queries:
             $queryUse
-            ${eventTiming.first} Events sent in ${eventTiming.second}ms
+            ${eventTiming.first} Events sent in ${eventTiming.second}ms.
+            $eventReceived Events received via Websocket.
             $channelCloseCounter Channels closed.
             $sessionCloseCounter Sessions closed.
             """.trimIndent())
         eventTiming = 0 to 0
         channelCloseCounter = 0
         sessionCloseCounter = 0
+        eventReceived = 0
         Thread.sleep(10_000)
     }
 }
@@ -201,10 +206,11 @@ private fun onEvent(
     try {
         val eventJson = jsonArray[1].asJsonObject
         val event = Event.fromJson(eventJson)
-        println("Websocket received kind ${event.kind} event ${event.id.toHex()}.")
+        eventReceived++
         processEvent(event, event.toJson(), ctx)
     } catch (e: Exception) {
-        println("Something went wrong with Event: ${gson.toJson(jsonArray[1])}\n$e")
+        println("Something went wrong with Event: ${gson.toJson(jsonArray[1])}")
+        e.printStackTrace()
     }
 }
 
@@ -321,7 +327,8 @@ private fun store(
         }
         true
     } catch (ex: Exception) {
-        println("Something went wrong with event $hexId: ${ex.message}")
+        println("Something went wrong with event $hexId")
+        ex.printStackTrace()
         false
     }
 }

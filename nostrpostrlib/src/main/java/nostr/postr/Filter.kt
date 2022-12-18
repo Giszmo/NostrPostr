@@ -257,7 +257,7 @@ class ProbabilisticFilter(
     override fun toShortString(): String {
         return "ProbabilisticFilter( " +
             (kinds?.let { "kinds: [${it.joinToString()}] " } ?: "") +
-                "ids/authors/tags: ${10.0.pow(ceil(log10((ids + authors + tags).toDouble()))).toInt()}s" +
+                "ids/authors/tags: ${10.0.pow(ceil(log10((ids + authors + tags).toDouble()))).toInt()}s " +
                 (since?.let { "after " } ?: "") +
                 (until?.let { "until " } ?: "") +
                 ")"
