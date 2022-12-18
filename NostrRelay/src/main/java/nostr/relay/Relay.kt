@@ -38,6 +38,8 @@ val featureList = mapOf(
 )
 
 var eventTiming = 0 to 0
+var channelCloseCounter = 0
+var sessionCloseCounter = 0
 
 class NostrRelay
 
@@ -102,7 +104,7 @@ fun main() {
                 subscribers[ctx] = subscribers[ctx] ?: mutableMapOf()
             }
             ws.onClose { ctx ->
-                println("Session closing. ${ctx.reason()}")
+                sessionCloseCounter++
                 subscribers.remove(ctx)
             }
             ws.onError { ctx ->
@@ -168,8 +170,12 @@ fun main() {
             ${subscribers.size} subscribers maintain $channelCount channels and are monitoring these queries:
             $queryUse
             ${eventTiming.first} Events sent in ${eventTiming.second}ms
+            $channelCloseCounter Channels closed.
+            $sessionCloseCounter Sessions closed.
             """.trimIndent())
         eventTiming = 0 to 0
+        channelCloseCounter = 0
+        sessionCloseCounter = 0
         Thread.sleep(10_000)
     }
 }
@@ -185,7 +191,7 @@ private fun onClose(
 ) {
     val channel = jsonArray[1].asString
     subscribers[ctx]!!.remove(channel)
-    println("Channel $channel closed.")
+    channelCloseCounter++
 }
 
 private fun onEvent(
@@ -195,7 +201,7 @@ private fun onEvent(
     try {
         val eventJson = jsonArray[1].asJsonObject
         val event = Event.fromJson(eventJson)
-        println("Websocket received kind ${event.kind} event. $eventJson")
+        println("Websocket received kind ${event.kind} event ${event.id}.")
         processEvent(event, event.toJson(), ctx)
     } catch (e: Exception) {
         println("Something went wrong with Event: ${gson.toJson(jsonArray[1])}")
