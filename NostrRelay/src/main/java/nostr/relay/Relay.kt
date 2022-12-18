@@ -6,7 +6,6 @@ import io.javalin.Javalin
 import io.javalin.http.staticfiles.Location
 import io.javalin.websocket.WsContext
 import io.javalin.websocket.WsMessageContext
-import jdk.nashorn.internal.parser.DateParser.DAY
 import nostr.postr.*
 import nostr.postr.events.Event
 import nostr.relay.Events.createdAt
