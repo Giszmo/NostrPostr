@@ -284,7 +284,6 @@ private fun store(
     val firstDTag = e.tags.firstOrNull { it.first() == "d" }?.getOrNull(1) ?: ""
     try {
         if (!DbEvent.find { hash eq hexId }.empty()) {
-            println("Skipping duplicate event $hexId")
             return@transaction false
         }
         e.checkSignature()
@@ -329,6 +328,7 @@ private fun store(
         true
     } catch (ex: Exception) {
         println("Something went wrong with event $hexId")
+        println(ex::class.java.canonicalName)
         ex.printStackTrace()
         false
     }
