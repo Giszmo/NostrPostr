@@ -14,6 +14,7 @@ import nostr.relay.Events.hash
 import nostr.relay.Events.kind
 import nostr.relay.Events.pubKey
 import nostr.relay.Events.raw
+import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -326,9 +327,11 @@ private fun store(
             }
         }
         true
+    } catch (ex: ExposedSQLException) {
+        println("Error Code: ${ex.errorCode}")
+        false
     } catch (ex: Exception) {
         println("Something went wrong with event $hexId")
-        println(ex::class.java.canonicalName)
         ex.printStackTrace()
         false
     }
