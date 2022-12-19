@@ -154,6 +154,7 @@ fun main() {
     }
     Client.connect(mutableListOf(filter))
     while (true) {
+        persistNewEvents()
         subscribers.forEach {it.key.sendPing()}
         val queries = subscribers
             .values
@@ -272,68 +273,79 @@ private fun processEvent(e: Event, eventJson: String, sender: WsMessageContext? 
     if (e.kind in 20_000..29_999) {
         return forward(e, eventJson)
     }
-    return store(e, eventJson)
+    return store(e)
             // forward if storing succeeds
             && forward(e, eventJson)
 }
 
-private fun store(
-    e: Event,
-    eventJson: String
-): Boolean = transaction {
+private val newEventBuffer: MutableMap<String, Event> = mutableMapOf()
+
+/**
+ * Stores in memory first, to then batch process new events.
+ */
+private fun store(e: Event): Boolean {
     val hexId = e.id.toHex()
-    val firstDTag = e.tags.firstOrNull { it.first() == "d" }?.getOrNull(1) ?: ""
-    try {
-        if (!DbEvent.find { hash eq hexId }.empty()) {
-            return@transaction false
+    synchronized(newEventBuffer) {
+        if (newEventBuffer.contains(hexId) || !DbEvent.find { hash eq hexId }.empty()) {
+            return false
         }
-        e.checkSignature()
-        val hexPubkey = e.pubKey.toHex()
-        val dbEvent = DbEvent.new {
-            hash = hexId
-            raw = eventJson
-            kind = e.kind
-            publicKey = hexPubkey
-            createdAt = e.createdAt
-            dTag = if (e.kind in 30_000..39_999) {
-                firstDTag
-            } else {
-                null
-            }
-        }
-        if (e.kind in listOf(0, 3) || e.kind in 10_000..19_999) {
-            // set all but "last" to "hidden"
-            val events = DbEvent.find { (pubKey eq hexPubkey) and (kind eq e.kind) }
-            events.forEach { it.hidden = true }
-            // set last to not hidden
-            events.orderBy(createdAt to SortOrder.DESC).first().hidden = false
-        }
-        if (e.kind in 30_000..39_999) {
-            // set all but "last" to "hidden" considering the first d-tag as per nip33
-            val events = DbEvent.find {
-                (pubKey eq hexPubkey) and (kind eq e.kind) and (dTag eq firstDTag)
-            }
-            events.forEach { it.hidden = true }
-            // set last to not hidden
-            events.orderBy(createdAt to SortOrder.DESC).first().hidden = false
-        }
-        e.tags.forEach { list ->
-            if (list.size >= 2 && list[0].length <= 20) {
-                DbTag.new {
-                    event = dbEvent.id.value
-                    key = list[0]
-                    value = list.getOrNull(1) ?: ""
+        newEventBuffer[hexId] = e
+    }
+    return true
+}
+
+private fun persistNewEvents() {
+    synchronized(newEventBuffer) {
+        transaction {
+            newEventBuffer.forEach { (hexId, e) ->
+                val firstDTag = e.tags.firstOrNull { it.first() == "d" }?.getOrNull(1) ?: ""
+                try {
+                    e.checkSignature()
+                    val hexPubkey = e.pubKey.toHex()
+                    val dbEvent = DbEvent.new {
+                        hash = hexId
+                        raw = e.toJson()
+                        kind = e.kind
+                        publicKey = hexPubkey
+                        createdAt = e.createdAt
+                        dTag = if (e.kind in 30_000..39_999) {
+                            firstDTag
+                        } else {
+                            null
+                        }
+                    }
+                    if (e.kind in listOf(0, 3) || e.kind in 10_000..19_999) {
+                        // set all but "last" to "hidden"
+                        val events = DbEvent.find { (pubKey eq hexPubkey) and (kind eq e.kind) }
+                        events.forEach { it.hidden = true }
+                        // set last to not hidden
+                        events.orderBy(createdAt to SortOrder.DESC).first().hidden = false
+                    }
+                    if (e.kind in 30_000..39_999) {
+                        // set all but "last" to "hidden" considering the first d-tag as per nip33
+                        val events = DbEvent.find {
+                            (pubKey eq hexPubkey) and (kind eq e.kind) and (dTag eq firstDTag)
+                        }
+                        events.forEach { it.hidden = true }
+                        // set last to not hidden
+                        events.orderBy(createdAt to SortOrder.DESC).first().hidden = false
+                    }
+                    e.tags.forEach { list ->
+                        if (list.size >= 2 && list[0].length <= 20) {
+                            DbTag.new {
+                                event = dbEvent.id.value
+                                key = list[0]
+                                value = list.getOrNull(1) ?: ""
+                            }
+                        }
+                    }
+                } catch (ex: Exception) {
+                    println("Something went wrong with event $hexId")
+                    ex.printStackTrace()
                 }
             }
         }
-        true
-    } catch (ex: ExposedSQLException) {
-        println("Error Code: ${ex.errorCode}")
-        false
-    } catch (ex: Exception) {
-        println("Something went wrong with event $hexId")
-        ex.printStackTrace()
-        false
+        newEventBuffer.clear()
     }
 }
 
@@ -341,13 +353,15 @@ private fun forward(
     event: Event,
     eventJson: String
 ): Boolean {
-    subscribers
-        .forEach { (wsContext, channels) ->
-            channels.forEach { (channel, filters) ->
-                if (filters.any { it.match(event) }) {
-                    wsContext.send("""["EVENT","$channel",$eventJson]""")
+    synchronized(subscribers) {
+        subscribers
+            .forEach { (wsContext, channels) ->
+                channels.forEach { (channel, filters) ->
+                    if (filters.any { it.match(event) }) {
+                        wsContext.send("""["EVENT","$channel",$eventJson]""")
+                    }
                 }
             }
-        }
+    }
     return true
 }
