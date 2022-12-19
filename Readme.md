@@ -7,43 +7,53 @@ This repository consists of multiple modules that will eventually be split into 
 repositories but as long as the basic libraries and tools are in very active development, juggling
 multiple repositories isn't worth it yet.
 
-The components are:
+## NIP support
+
+Library, Relay and/or App implement the following NIPs. Not all NIPs apply to all parts and some
+NIPs might not be implemented fully.
+
+- [x] NIP-01: Basic protocol flow description
+- [x] NIP-02: Contact List and Petnames
+- [ ] NIP-03: OpenTimestamps Attestations for Events
+- [x] NIP-04: Encrypted Direct Message
+- [ ] NIP-05: Mapping Nostr keys to DNS-based internet identifiers
+- [ ] NIP-06: Basic key derivation from mnemonic seed phrase
+- [ ] NIP-07: window.nostr capability for web browsers
+- [x] NIP-09: Event Deletion
+- [x] NIP-11: Relay Information Document
+- [x] NIP-12: Generic Tag Queries
+- [ ] NIP-13: Proof of Work
+- [ ] NIP-14: Subject tag in text events.
+- [x] NIP-15: End of Stored Events Notice
+- [x] NIP-16: Event Treatment
+- [ ] NIP-20: Command Results
+- [ ] NIP-22: Event created_at Limits
+- [ ] NIP-25: Reactions
+- [ ] NIP-26: Delegated Event Signing
+- [ ] NIP-28: Public Chat
+- [ ] NIP-35: User Discovery
+- [ ] NIP-36: Sensitive Content
+- [ ] NIP-40: Expiration Timestamp
 
 ## Nostr Library in Kotlin - nostrpostrlib
 
 This is the core all other modules build upon. It provides facilities to connect to nostr relays,
-to send and receive events.
+to send and receive events, to encrypt/decrypt messages, ...
 
 ## Examples
 
 Here you can find some simple use cases of the library.
 
-## App
+## Android App
 
 Here are the first efforts of developing a full Nostr Social client for Android.
 
-Components to be developed:
-
-- [ ] Profile Editor
-- [ ] Profile Picker
-- [x] Send and Receive Events
-- [ ] Feed
-- [ ] Notifications
-- [ ] Chat
-- [ ] Cache data to local DB
+It's basically abandoned in favor of [Nostroid](https://github.com/Giszmo/nostroid) and absent
+others putting work into it, it will be removed from this repo.
 
 ## NostrRelay
 
-This is a full relay implementation. It's not battle tested yet but works fine for the author.
-
-- [x] nip 1
-- [x] nip 2
-- [x] nip 9
-- [x] nip 11
-- [x] nip 12
-- [x] nip 15
-- [x] nip 16
-
+This is a full relay implementation.
 
 # History
 

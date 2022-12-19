@@ -28,20 +28,19 @@ internal class PrivateDmEventTest {
 
     @Test
     fun example() {
-        println("""privAlice:         ${alice.privKey!!.toHex()}
-pubAlice:          ${alice.pubKey.toHex()}
-privBob:           ${bob.privKey!!.toHex()}
-pubBob:            ${bob.pubKey.toHex()}
-privCarol:         ${carol.privKey!!.toHex()}
-pubCarol:          ${carol.pubKey.toHex()}
-
-sharedSecretAB:    ${Utils.getSharedSecret(alice.privKey!!, bob.pubKey).toHex()}
-msg:               $msg
-event:             ${event.toJson()}
-contentBobNip04:   ${Utils.decrypt(event.content, alice.privKey!!, bob.pubKey)}
-contentBobNip18:   ${event.plainContent(bob.privKey!!)}
-contentCarol:      Error
-""")
+        println("""|privAlice:         ${alice.privKey!!.toHex()}
+            |pubAlice:          ${alice.pubKey.toHex()}
+            |privBob:           ${bob.privKey!!.toHex()}
+            |pubBob:            ${bob.pubKey.toHex()}
+            |privCarol:         ${carol.privKey!!.toHex()}
+            |pubCarol:          ${carol.pubKey.toHex()}
+            |
+            |sharedSecretAB:    ${Utils.getSharedSecret(alice.privKey!!, bob.pubKey).toHex()}
+            |msg:               $msg
+            |event:             ${event.toJson()}
+            |contentBobNip04:   ${Utils.decrypt(event.content, alice.privKey!!, bob.pubKey)}
+            |contentBobNip18:   ${event.plainContent(bob.privKey!!)}
+            |contentCarol:      Error""".trimMargin())
     }
 
     @Test
