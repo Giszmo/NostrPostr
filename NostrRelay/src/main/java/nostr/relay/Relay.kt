@@ -285,13 +285,16 @@ private val newEventBuffer: MutableMap<String, Event> = mutableMapOf()
  */
 private fun store(e: Event): Boolean {
     val hexId = e.id.toHex()
+    var retVal = true
     synchronized(newEventBuffer) {
-        if (newEventBuffer.contains(hexId) || !DbEvent.find { hash eq hexId }.empty()) {
-            return false
+        transaction {
+            if (newEventBuffer.contains(hexId) || !DbEvent.find { hash eq hexId }.empty()) {
+                retVal = false
+            }
         }
         newEventBuffer[hexId] = e
     }
-    return true
+    return retVal
 }
 
 private fun persistNewEvents() {
