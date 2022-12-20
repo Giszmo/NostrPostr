@@ -234,7 +234,7 @@ private fun onRequest(
                 null // ignore just this query
             }
         }
-    subscribers[ctx]!![channel] = filters.map { it.spaceOptimized() }
+    subscribers[ctx]?.put(channel, Collections.synchronizedList(filters.map { it.spaceOptimized() }))
     sendEvents(channel, filters, ctx)
     ctx.send("""["EOSE","$channel"]""")
 }
