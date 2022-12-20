@@ -168,16 +168,16 @@ fun main() {
             .map { it to Collections.frequency(queries, it) }
             .sortedBy { - it.second }
             .joinToString("\n") { "${it.second} times ${it.first}" }
-        println("""
-            
-            ${Date()}: pinging all sockets. ${rt.freeMemory() / 1024 / 1024}MB / ${rt.totalMemory() / 1024 / 1024}MB free.
-            ${subscribers.size} subscribers maintain $channelCount channels and are monitoring these queries:
-            $queryUse
-            ${eventTiming.first} Events sent in ${eventTiming.second}ms.
-            $eventReceived Events received via Websocket.
-            $channelCloseCounter Channels closed.
-            $sessionCloseCounter Sessions closed.
-            """.trimIndent())
+        println("""|
+            |
+            |${Date()}: pinging all sockets. ${rt.freeMemory() / 1024 / 1024}MB / ${rt.totalMemory() / 1024 / 1024}MB free.
+            |${subscribers.size} subscribers maintain $channelCount channels and are monitoring these queries:
+            |$queryUse
+            |${eventTiming.first} Events sent in ${eventTiming.second}ms.
+            |$eventReceived Events received via Websocket.
+            |$channelCloseCounter Channels closed.
+            |$sessionCloseCounter Sessions closed.
+            |""".trimMargin())
         eventTiming = 0 to 0
         channelCloseCounter = 0
         sessionCloseCounter = 0
