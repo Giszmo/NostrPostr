@@ -103,7 +103,7 @@ fun main() {
         }
         ws("/") { ws ->
             ws.onConnect { ctx ->
-                subscribers[ctx] = subscribers[ctx] ?: mutableMapOf()
+                subscribers[ctx] = subscribers[ctx] ?: Collections.synchronizedMap(LinkedHashMap())
             }
             ws.onClose { ctx ->
                 sessionCloseCounter++
