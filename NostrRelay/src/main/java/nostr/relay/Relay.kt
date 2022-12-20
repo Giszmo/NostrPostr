@@ -27,7 +27,7 @@ val gson: Gson = GsonBuilder().create()
 /**
  * Per socket there can be multiple channels with multiple filters each.
  */
-val subscribers = mutableMapOf<WsContext, MutableMap<String, List<Filter>>>()
+val subscribers: MutableMap<WsContext, MutableMap<String, List<Filter>>> = Collections.synchronizedMap(LinkedHashMap())
 val featureList = mapOf(
     "id" to "wss://relay.nostr.info",
     "name" to "NostrPostrRelay",
