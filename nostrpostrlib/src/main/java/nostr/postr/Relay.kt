@@ -20,11 +20,11 @@ class Relay(
 
     fun unregister(listener: Listener) = listeners.remove(listener)
 
-    fun connect(reconnectTs: Long? = null) {
+    fun connect(subscriptionId: String, reconnectTs: Long? = null) {
         val request = Request.Builder().url(url).build()
         val listener = object : WebSocketListener() {
             override fun onOpen(webSocket: WebSocket, response: Response) {
-                webSocket.send("""["REQ","main-channel",${Client.filters.joinToString() {it.toJson()} }]""")
+                webSocket.send("""["REQ",${subscriptionId},${Client.filters.joinToString {it.toJson()} }]""")
                 listeners.forEach { it.onRelayStateChange(this@Relay, Type.CONNECT) }
             }
 
@@ -64,7 +64,7 @@ class Relay(
                 // As a rough guess, we assume we might have missed events during those last 30s ...
                 // TODO: Make sure that queries that have not gotten their EOSE yet, get resent unmodified.
                 val lastGood = System.currentTimeMillis() - 30_000
-                connect(lastGood)
+                connect(subscriptionId = subscriptionId, reconnectTs = lastGood)
             }
 
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
@@ -74,7 +74,7 @@ class Relay(
             }
         }
         socket = httpClient.newWebSocket(request, listener)
-        sendFilter(reconnectTs)
+        sendFilter(requestId = subscriptionId, reconnectTs = reconnectTs)
     }
 
     fun disconnect() {
@@ -82,13 +82,13 @@ class Relay(
         socket.close(1000, "Normal close")
     }
 
-    fun sendFilter(reconnectTs: Long? = null) {
+    fun sendFilter(requestId: String, reconnectTs: Long? = null) {
         val filters = if (reconnectTs != null) {
             Client.filters.map { JsonFilter(it.ids, it.authors, it.kinds, it.tags, since = reconnectTs) }
         } else {
             Client.filters
         }
-        val request = """["REQ","main",${filters.joinToString(",") { it.toJson() }}]"""
+        val request = """["REQ",$requestId,${filters.joinToString(",") { it.toJson() }}]"""
         socket.send(request)
     }
 

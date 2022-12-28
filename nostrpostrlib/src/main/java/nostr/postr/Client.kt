@@ -24,13 +24,14 @@ object Client: RelayPool.Listener {
     internal var relays = Constants.defaultRelays
 
     fun connect(
+        subscriptionId: String = "main-channel",
         filters: MutableList<JsonFilter> = mutableListOf(JsonFilter()),
         relays: Array<Relay> = Constants.defaultRelays
     ) {
         this.filters = filters
         this.relays = relays
         RelayPool.register(this)
-        RelayPool.connect()
+        RelayPool.connect(subscriptionId)
     }
 
     fun disconnect() {
@@ -38,9 +39,9 @@ object Client: RelayPool.Listener {
         RelayPool.disconnect()
     }
 
-    fun addFilter(filter: JsonFilter) {
+    fun addFilter(requestId: String = "main", filter: JsonFilter) {
         filters.add(filter)
-        RelayPool.sendFilter()
+        RelayPool.sendFilter(requestId)
     }
 
     override fun onEvent(event: Event, relay: Relay) {

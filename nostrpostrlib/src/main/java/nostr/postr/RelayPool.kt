@@ -14,8 +14,8 @@ object RelayPool: Relay.Listener {
         Constants.defaultRelays.forEach { addRelay(it) }
     }
 
-    fun connect() {
-        relays.forEach { it.connect() }
+    fun connect(subscriptionId: String) {
+        relays.forEach { it.connect(subscriptionId = subscriptionId) }
     }
 
     fun disconnect() {
@@ -77,8 +77,8 @@ object RelayPool: Relay.Listener {
         listeners.forEach { it.onRelayStateChange(type, relay) }
     }
 
-    fun sendFilter() {
-        relays.forEach(Relay::sendFilter)
+    fun sendFilter(requestId: String) {
+        relays.forEach { it.sendFilter(requestId) }
     }
 
     fun send(signedEvent: Event) {
