@@ -83,9 +83,18 @@ fun Int.toByteArray(): ByteArray {
 fun ByteArray.toNsec() = Bech32.encodeBytes(hrp = "nsec", this, Bech32.Encoding.Bech32)
 fun ByteArray.toNpub() = Bech32.encodeBytes(hrp = "npub", this, Bech32.Encoding.Bech32)
 
-fun String.rawHexForm() = Bech32.decodeBytes(this).second
+fun String.bechToBytes(hrp: String? = null): ByteArray {
 
-fun String.rawHexFormWithHrp(): Pair<String, ByteArray> {
-    val decodedHex = Bech32.decodeBytes(this)
-    return Pair(decodedHex.first, decodedHex.second)
+    val decodedForm = Bech32.decodeBytes(this)
+    hrp?.also {
+        if (it != decodedForm.first){
+            throw IllegalArgumentException("Expected $it but obtained ${decodedForm.first}")
+        }
+    }
+    return decodedForm.second
 }
+
+/**
+ * Interpret the string as Bech32 encoded and return hrp and ByteArray as Pair
+ */
+fun String.bechToBytesWithHrp() = Bech32.decodeBytes(this).run { Pair(first, second) }

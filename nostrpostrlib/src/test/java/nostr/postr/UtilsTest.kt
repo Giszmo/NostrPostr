@@ -61,11 +61,11 @@ internal class UtilsTest {
     fun convertNpubToPubkeyHex(){
         val testKeyNpub = "npub1unz84m0236j5y404hgr6wuznkfz486dew4p4u4k6xs76rxhv0zqsq9q6t8"
         val correctKeyHex = "e4c47aedea8ea54255f5ba07a77053b24553e9b975435e56da343da19aec7881"
-        val derivedKeyHex = testKeyNpub.rawHexForm().toHex()
+        val derivedKeyHex = testKeyNpub.bechToBytes().toHex()
 
         val jackNpub = "npub1sg6plzptd64u62a878hep2kev88swjh3tw00gjsfl8f237lmu63q0uf63m"
         val correctJackHex = "82341f882b6eabcd2ba7f1ef90aad961cf074af15b9ef44a09f9d2a8fbfbe6a2"
-        val derivedJackKeyHex = jackNpub.rawHexForm().toHex()
+        val derivedJackKeyHex = jackNpub.bechToBytes().toHex()
 
         assertEquals(correctKeyHex, derivedKeyHex)
         assertEquals(correctJackHex, derivedJackKeyHex)
