@@ -32,7 +32,8 @@ class LoadOneUserProfile {
         @JvmStatic
         fun main(vararg args: String) {
             Client.subscribe(listener)
-            Client.connect(mutableListOf(JsonFilter(kinds = listOf(MetadataEvent.kind), authors = listOf(pubKey))))
+
+            Client.connect(filters = mutableListOf(JsonFilter(kinds = listOf(MetadataEvent.kind), authors = listOf(pubKey))))
             while (running) {
                 Thread.sleep(100)
             }

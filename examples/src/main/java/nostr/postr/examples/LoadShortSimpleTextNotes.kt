@@ -33,7 +33,7 @@ class LoadShortSimpleTextNotes {
         @JvmStatic
         fun main(vararg args: String) {
             Client.subscribe(listener)
-            Client.connect(mutableListOf(JsonFilter(kinds = listOf(TextNoteEvent.kind))))
+            Client.connect(filters = mutableListOf(JsonFilter(kinds = listOf(TextNoteEvent.kind))))
             while (running) {
                 Thread.sleep(100)
             }

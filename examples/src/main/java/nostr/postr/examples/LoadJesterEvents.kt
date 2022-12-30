@@ -35,7 +35,7 @@ class LoadJesterEvents {
         fun main(vararg args: String) {
             Client.subscribe(listener)
             // We request to get only kind 30 events - the kind the Jester Chess client uses
-            Client.connect(mutableListOf(JsonFilter(kinds = listOf(30))))
+            Client.connect(filters = mutableListOf(JsonFilter(kinds = listOf(30))))
             while (running) {
                 Thread.sleep(100)
             }
