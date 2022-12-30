@@ -10,8 +10,16 @@ object RelayPool: Relay.Listener {
     private val listeners = HashSet<Listener>()
     private val eventIds = HashSet<String>()
 
-    init {
-        Constants.defaultRelays.forEach { addRelay(it) }
+//    init {
+//        Constants.defaultRelays.forEach { addRelay(it) }
+//    }
+
+    fun loadRelays(relayList: List<Relay>? = null){
+        if (relayList != null){
+            relayList.forEach { addRelay(it) }
+        } else {
+            Constants.defaultRelays.forEach { addRelay(it) }
+        }
     }
 
     fun connect(subscriptionId: String) {

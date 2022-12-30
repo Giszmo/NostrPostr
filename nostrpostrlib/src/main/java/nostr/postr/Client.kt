@@ -30,6 +30,7 @@ object Client: RelayPool.Listener {
     ) {
         this.filters = filters
         this.relays = relays
+        RelayPool.loadRelays(relays.toList())
         RelayPool.register(this)
         RelayPool.connect(subscriptionId)
     }
