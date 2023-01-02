@@ -15,7 +15,7 @@ object RelayPool: Relay.Listener {
 //    }
 
     fun loadRelays(relayList: List<Relay>? = null){
-        if (relayList != null){
+        if (!relayList.isNullOrEmpty()){
             relayList.forEach { addRelay(it) }
         } else {
             Constants.defaultRelays.forEach { addRelay(it) }
