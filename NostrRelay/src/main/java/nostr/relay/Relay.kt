@@ -152,7 +152,7 @@ fun main() {
         // to cover even extended down-times automatically
         JsonFilter(since = Calendar.getInstance().apply { add(Calendar.HOUR, -6) }.time.time / 1000)
     }
-    Client.connect(mutableListOf(filter))
+    Client.connect(filters = mutableListOf(filter))
     while (true) {
         subscribers.forEach {it.key.sendPing()}
         val queries = subscribers

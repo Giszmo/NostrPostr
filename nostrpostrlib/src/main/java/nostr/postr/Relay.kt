@@ -23,8 +23,9 @@ class Relay(
     fun connect(subscriptionId: String, reconnectTs: Long? = null) {
         val request = Request.Builder().url(url).build()
         val listener = object : WebSocketListener() {
+
             override fun onOpen(webSocket: WebSocket, response: Response) {
-                webSocket.send("""["REQ",${subscriptionId},${Client.filters.joinToString {it.toJson()} }]""")
+                sendFilter(requestId = subscriptionId, reconnectTs = reconnectTs)
                 listeners.forEach { it.onRelayStateChange(this@Relay, Type.CONNECT) }
             }
 
@@ -74,7 +75,7 @@ class Relay(
             }
         }
         socket = httpClient.newWebSocket(request, listener)
-        sendFilter(requestId = subscriptionId, reconnectTs = reconnectTs)
+
     }
 
     fun disconnect() {
@@ -88,7 +89,7 @@ class Relay(
         } else {
             Client.filters
         }
-        val request = """["REQ",$requestId,${filters.joinToString(",") { it.toJson() }}]"""
+        val request = """["REQ","$requestId",${filters.joinToString(",") { it.toJson() }}]"""
         socket.send(request)
     }
 
