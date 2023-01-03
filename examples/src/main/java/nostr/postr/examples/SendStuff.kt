@@ -23,11 +23,12 @@ class SendStuff {
         fun main(vararg args: String) {
             println("""Persona(privKey:${persona.privKey!!.toHex()}, pubKey:${persona.pubKey.toHex()})""")
             Client.subscribe(listener)
-            Client.connect(filters = mutableListOf(JsonFilter(
-                authors = listOf(persona.pubKey.toHex()))), relays = arrayOf(Relay("ws://127.0.0.1:7070/",
+            Client.connect(relays = arrayOf(Relay("ws://127.0.0.1:7070/",
                 read = true,
                 write = true
-            ))
+            )))
+            Client.request(filters = mutableListOf(JsonFilter(
+                authors = listOf(persona.pubKey.toHex())))
             )
             val event = Event.create(persona.privKey!!, 35_000, listOf())
             Client.send(event)

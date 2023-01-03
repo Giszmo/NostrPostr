@@ -47,8 +47,8 @@ class LoadOneUserProfile {
         @JvmStatic
         fun main(vararg args: String) {
             Client.subscribe(listener)
-
-            Client.connect(subscriptionId = "profile",
+            Client.connect()
+            Client.request(subscriptionId = "profile",
                 filters = mutableListOf(JsonFilter(kinds = listOf(MetadataEvent.kind), authors = listOf(pubKey)))
             )
             while (running) {

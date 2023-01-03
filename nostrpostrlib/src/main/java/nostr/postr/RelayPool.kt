@@ -10,9 +10,6 @@ object RelayPool: Relay.Listener {
     private val listeners = HashSet<Listener>()
     private val eventIds = HashSet<String>()
 
-//    init {
-//        Constants.defaultRelays.forEach { addRelay(it) }
-//    }
 
     fun loadRelays(relayList: List<Relay>? = null){
         if (!relayList.isNullOrEmpty()){
@@ -22,8 +19,9 @@ object RelayPool: Relay.Listener {
         }
     }
 
-    fun connect(subscriptionId: String) {
+    fun sendFilter(subscriptionId: String) {
         relays.forEach { it.connect(subscriptionId = subscriptionId) }
+
     }
 
     fun disconnect() {
@@ -83,10 +81,6 @@ object RelayPool: Relay.Listener {
 
     override fun onRelayStateChange(relay: Relay, type: Relay.Type) {
         listeners.forEach { it.onRelayStateChange(type, relay) }
-    }
-
-    fun sendFilter(requestId: String) {
-        relays.forEach { it.sendFilter(requestId) }
     }
 
     fun send(signedEvent: Event) {

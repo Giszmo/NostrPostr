@@ -85,9 +85,18 @@ class Relay(
 
     fun sendFilter(requestId: String, reconnectTs: Long? = null) {
         val filters = if (reconnectTs != null) {
-            Client.filters.map { JsonFilter(it.ids, it.authors, it.kinds, it.tags, since = reconnectTs) }
+            Client.subscriptions[requestId]?.let {
+                it.map { filter ->
+                    JsonFilter(filter.ids, filter.authors, filter.kinds, filter.tags, since = reconnectTs)
+                }
+            } ?: error("No filter(s) found.")
+            //Client.filters.map { JsonFilter(it.ids, it.authors, it.kinds, it.tags, since = reconnectTs) }
         } else {
-            Client.filters
+            Client.subscriptions[requestId]?.let {
+                it.map { filter ->
+                    JsonFilter(filter.ids, filter.authors, filter.kinds, filter.tags)
+                }
+            } ?: error("No filter(s) found.")
         }
         val request = """["REQ","$requestId",${filters.joinToString(",") { it.toJson() }}]"""
         socket.send(request)

@@ -102,9 +102,10 @@ class LoadFollowsOfFollowsFromSingleRelay {
         fun main(vararg args: String) {
             Client.subscribe(listener)
             println("Phase one: Requesting user's follows")
-            Client.connect(filters = mutableListOf(
+            Client.connect(relays = relays)
+            Client.request(filters = mutableListOf(
                 JsonFilter(kinds = listOf(ContactListEvent.kind), authors = listOf(pubKey))
-            ), relays = relays)
+            ))
             while (running) {
                 Thread.sleep(100)
             }

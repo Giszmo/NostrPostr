@@ -10,7 +10,6 @@ import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import nostr.postr.databinding.ActivityMainBinding
 import nostr.postr.events.*
-import java.util.*
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
@@ -49,7 +48,8 @@ class MainActivity : AppCompatActivity() {
         val filter = JsonFilter(
             since = 1652305L
         )
-        Client.connect(mutableListOf(filter))
+        Client.connect()
+        Client.request(filters = mutableListOf(filter))
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
