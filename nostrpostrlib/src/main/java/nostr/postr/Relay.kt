@@ -63,10 +63,7 @@ class Relay(
 
             override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
                 listeners.forEach { it.onRelayStateChange(this@Relay, Type.DISCONNECT) }
-                // As a rough guess, we assume we might have missed events during those last 30s ...
-                // TODO: Make sure that queries that have not gotten their EOSE yet, get resent unmodified.
-                val lastGood = System.currentTimeMillis() - 30_000
-                connect(subscriptionId = subscriptionId, reconnectTs = lastGood)
+
             }
 
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
