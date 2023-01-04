@@ -77,16 +77,16 @@ object Client: RelayPool.Listener {
         RelayPool.sendFilter(requestId)
     }
 
-    override fun onEvent(event: Event, relay: Relay) {
-        listeners.forEach { it.onEvent(event, relay) }
+    override fun onEvent(event: Event, subscriptionId: String, relay: Relay) {
+        listeners.forEach { it.onEvent(event, subscriptionId, relay) }
     }
 
-    override fun onNewEvent(event: Event) {
-        listeners.forEach { it.onNewEvent(event) }
+    override fun onNewEvent(event: Event, subscriptionId: String) {
+        listeners.forEach { it.onNewEvent(event, subscriptionId) }
     }
 
-    override fun onError(error: Error, relay: Relay) {
-        listeners.forEach { it.onError(error, relay) }
+    override fun onError(error: Error, subscriptionId: String, relay: Relay) {
+        listeners.forEach { it.onError(error, subscriptionId, relay) }
     }
 
     override fun onRelayStateChange(type: Relay.Type, relay: Relay) {
@@ -106,18 +106,18 @@ object Client: RelayPool.Listener {
         /**
          * A new message was received
          */
-        open fun onEvent(event: Event, relay: Relay) = Unit
+        open fun onEvent(event: Event, subscriptionId: String, relay: Relay) = Unit
 
         /**
          * A new message was received
          */
-        open fun onNewEvent(event: Event) = Unit
+        open fun onNewEvent(event: Event, subscriptionId: String) = Unit
 
         /**
          * A new or repeat message was received
          */
 
-        open fun onError(error: Error, relay: Relay) = Unit
+        open fun onError(error: Error, subscriptionId: String, relay: Relay) = Unit
 
         /**
          * Connected to or disconnected from a relay

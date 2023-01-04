@@ -37,25 +37,26 @@ class Relay(
                     when (type) {
                         "EVENT" -> {
                             val event = Event.fromJson(msg[2], Client.lenient)
-                            listeners.forEach { it.onEvent(this@Relay, event) }
+                            listeners.forEach { it.onEvent(this@Relay, subscriptionId, event) }
                         }
                         "EOSE" -> listeners.forEach {
                             it.onRelayStateChange(this@Relay, Type.EOSE)
                         }
                         "NOTICE" -> listeners.forEach {
                             // "channel" being the second string in the string array ...
-                            it.onError(this@Relay, Error("Relay sent notice: $channel"))
+                            it.onError(this@Relay, subscriptionId, Error("Relay sent notice: $channel"))
                         }
                         else -> listeners.forEach {
                             it.onError(
                                 this@Relay,
+                                subscriptionId,
                                 Error("Unknown type $type on channel $channel. Msg was $text")
                             )
                         }
                     }
                 } catch (t: Throwable) {
                     text.chunked(2000) { chunked ->
-                        listeners.forEach { it.onError(this@Relay, Error("Problem with $chunked")) }
+                        listeners.forEach { it.onError(this@Relay, subscriptionId, Error("Problem with $chunked")) }
                     }
                 }
             }
@@ -70,7 +71,7 @@ class Relay(
 
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
                 listeners.forEach {
-                    it.onError(this@Relay, Error("WebSocket Failure", t))
+                    it.onError(this@Relay, subscriptionId, Error("WebSocket Failure", t))
                 }
             }
         }
@@ -123,9 +124,9 @@ class Relay(
         /**
          * A new message was received
          */
-        fun onEvent(relay: Relay, event: Event)
+        fun onEvent(relay: Relay, subscriptionId: String, event: Event)
 
-        fun onError(relay: Relay, error: Error)
+        fun onError(relay: Relay, subscriptionId: String, error: Error)
 
         /**
          * Connected to or disconnected from a relay

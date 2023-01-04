@@ -14,7 +14,7 @@ class LoadShortSimpleTextNotes {
     companion object {
         private var count = 0
         private val listener = object: Client.Listener() {
-            override fun onNewEvent(event: Event) {
+            override fun onNewEvent(event: Event, subscriptionId: String) {
                 (event as? TextNoteEvent)?.run {
                     // only match short, simple messages with no markdown, html or other fancy stuff
                     val pattern = Regex("[a-zA-Z .,:!?]{2,30}")

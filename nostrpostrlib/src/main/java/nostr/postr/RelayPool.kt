@@ -60,31 +60,31 @@ object RelayPool: Relay.Listener {
         /**
          * A new event was received
          */
-        fun onNewEvent(event: Event)
+        fun onNewEvent(event: Event, subscriptionId: String)
 
         /**
          * A new or repeat message was received
          */
 
-        fun onEvent(event: Event, relay: Relay)
+        fun onEvent(event: Event, subscriptionId: String, relay: Relay)
 
-        fun onError(error: Error, relay: Relay)
+        fun onError(error: Error, subscriptionId: String, relay: Relay)
 
         fun onRelayStateChange(type: Relay.Type, relay: Relay)
     }
 
     @Synchronized
-    override fun onEvent(relay: Relay, event: Event) {
-        listeners.forEach { it.onEvent(event, relay) }
+    override fun onEvent(relay: Relay, subscriptionId: String, event: Event) {
+        listeners.forEach { it.onEvent(event, subscriptionId, relay) }
         synchronized(this) {
             if (eventIds.add(event.id.toHex())) {
-                listeners.forEach { it.onNewEvent(event) }
+                listeners.forEach { it.onNewEvent(event, subscriptionId) }
             }
         }
     }
 
-    override fun onError(relay: Relay, error: Error) {
-        listeners.forEach { it.onError(error, relay) }
+    override fun onError(relay: Relay, subscriptionId: String, error: Error) {
+        listeners.forEach { it.onError(error, subscriptionId, relay) }
     }
 
     override fun onRelayStateChange(relay: Relay, type: Relay.Type) {

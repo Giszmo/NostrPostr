@@ -12,7 +12,7 @@ class LoadOneContactListTrackingRelays {
         val startTime = System.currentTimeMillis()
         private val pubKey = "46fcbe3065eaf1ae7811465924e48923363ff3f526bd6f73d7c184b16bd8ce4d"
         private val listener = object: Client.Listener() {
-            override fun onEvent(event: Event, relay: Relay) {
+            override fun onEvent(event: Event, subscriptionId: String, relay: Relay) {
                 if (event.pubKey.toHex() == pubKey) {
                     logDetail(
                         event,

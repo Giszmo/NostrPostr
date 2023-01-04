@@ -19,7 +19,7 @@ class LoadJesterEvents {
         private val gson: Gson = GsonBuilder().create()
         private var count = 0
         private val listener = object: Client.Listener() {
-            override fun onNewEvent(event: Event) {
+            override fun onNewEvent(event: Event, subscriptionId: String) {
                 count++
                 // Jester stores data as JSON in the Event's content. Here we just extract the chess
                 // move and print it

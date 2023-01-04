@@ -11,8 +11,8 @@ class LoadOneUserProfile {
     companion object {
         private val pubKey = "46fcbe3065eaf1ae7811465924e48923363ff3f526bd6f73d7c184b16bd8ce4d"
         private val listener = object: Client.Listener() {
-            override fun onNewEvent(event: Event) {
-                println("From onNewEvent -->")
+            override fun onNewEvent(event: Event, subscriptionId: String) {
+                println("From onNewEvent with subscription ID $subscriptionId -->")
                 if (event.pubKey.toHex() == pubKey) {
                     (event as? MetadataEvent)?.contactMetaData?.run {
                         logDetail(
@@ -26,22 +26,6 @@ class LoadOneUserProfile {
                 }
             }
 
-            override fun onRelayStateChange(type: Relay.Type, relay: Relay) {
-                println("Relay state change -> ${type.name} from ${relay.url}")
-                if (type == Relay.Type.EOSE){
-                    println("Disconnecting from ${relay.url}")
-                    relay.disconnect()
-                    println("Disconnected from ${relay.url}")
-
-                }
-            }
-
-            override fun onError(error: Error, relay: Relay) {
-                println("Error from ${relay.url} : ${error.message}")
-                println("Disconnecting from ${relay.url}")
-                relay.disconnect()
-                println("Disconnected from ${relay.url}")
-            }
         }
 
         @JvmStatic

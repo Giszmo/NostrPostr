@@ -19,14 +19,14 @@ class LoadFollowsOfFollowsFromSingleRelay {
         private val keyNames = mutableMapOf<String, String>()
         private var eventsReceived = mutableListOf<String>()
         private val listener = object: Client.Listener() {
-            override fun onNewEvent(event: Event) {
+            override fun onNewEvent(event: Event, subscriptionId: String) {
                 when (event) {
                     is ContactListEvent -> onContactList(event)
                     is MetadataEvent -> onMetadataEvent(event)
                 }
             }
 
-            override fun onEvent(event: Event, relay: Relay) {
+            override fun onEvent(event: Event, subscriptionId: String, relay: Relay) {
                 eventsReceived.add("${event.pubKey.toHex().substring(0, 6)}_${event.kind}")
             }
         }

@@ -14,7 +14,7 @@ import nostr.postr.events.*
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private val clientListener = object : Client.Listener() {
-        override fun onNewEvent(event: Event) {
+        override fun onNewEvent(event: Event, subscriptionId: String) {
             when (event.kind) {
                 MetadataEvent.kind, // 0
                 TextNoteEvent.kind, // 1
@@ -27,7 +27,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        override fun onError(error: Error, relay: Relay) {
+        override fun onError(error: Error, subscriptionId: String, relay: Relay) {
             Log.e("ERROR", "Relay ${relay.url}: ${error.message}")
         }
 

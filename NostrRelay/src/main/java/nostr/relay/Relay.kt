@@ -138,7 +138,7 @@ fun main() {
     }.start("127.0.0.1", 7070)
     // get some recent and all future Events from other relays
     Client.subscribe(object : Client.Listener() {
-        override fun onNewEvent(event: Event) {
+        override fun onNewEvent(event: Event, subscriptionId: String) {
             processEvent(event, event.toJson())
         }
 

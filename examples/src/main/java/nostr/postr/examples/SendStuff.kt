@@ -9,7 +9,7 @@ class SendStuff {
         private val persona = Persona(Hex.decode("ed677a60034a04bb282e1b4587e1ece5c5b81e2261d7aeea933c0ee07095df80"))
 
         private val listener = object: Client.Listener() {
-            override fun onNewEvent(event: Event) {
+            override fun onNewEvent(event: Event, subscriptionId: String) {
                 if (event.pubKey.toHex() == persona.pubKey.toHex()) {
                     logDetail(event, event.toJson())
                     stop()
