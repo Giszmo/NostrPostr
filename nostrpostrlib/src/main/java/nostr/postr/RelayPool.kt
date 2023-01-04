@@ -25,7 +25,7 @@ object RelayPool: Relay.Listener {
     }
 
     fun send(signedEvent: Event) {
-        relays.forEach { it.sendEvent(signedEvent) }
+        relays.forEach { it.send(signedEvent) }
     }
 
     fun close(subscriptionId: String){

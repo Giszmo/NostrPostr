@@ -100,7 +100,7 @@ class Relay(
         socket.send(request)
     }
 
-    fun sendEvent(signedEvent: Event) {
+    fun send(signedEvent: Event) {
         socket.send("""["EVENT",${signedEvent.toJson()}]""")
     }
 
