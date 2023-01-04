@@ -6,7 +6,7 @@ import nostr.postr.toHex
 import java.util.*
 
 /**
- * This is the nip-18 encrypted DM fixing meta data leakage of nip-04 EncryptedDmEvent. It is
+ * This is the nip-18 encrypted DM fixing metadata leakage of nip-04 EncryptedDmEvent. It is
  * compatible with nip-4 in that nip-4 Events can be loaded as nip-18 Events, deprecating
  * EncryptedDmEvent.
  */
@@ -52,7 +52,7 @@ class PrivateDmEvent(
             // decrypt randomly "succeeds". With the nip18Advertisement prefix we kill two birds
             // with one stone:
             // 1. We now can reliably tell gibberish from successfully decrypted messages.
-            // 2. We get counter parties to enable nip18 without having the message visible where
+            // 2. We get counterparties to enable nip18 without having the message visible where
             //    markdown is supported.
             if (retVal.startsWith(nip18Advertisement)) {
                 retVal.substring(16)

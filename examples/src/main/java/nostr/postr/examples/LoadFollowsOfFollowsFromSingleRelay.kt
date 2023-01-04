@@ -19,14 +19,14 @@ class LoadFollowsOfFollowsFromSingleRelay {
         private val keyNames = mutableMapOf<String, String>()
         private var eventsReceived = mutableListOf<String>()
         private val listener = object: Client.Listener() {
-            override fun onNewEvent(event: Event) {
+            override fun onNewEvent(event: Event, subscriptionId: String) {
                 when (event) {
                     is ContactListEvent -> onContactList(event)
                     is MetadataEvent -> onMetadataEvent(event)
                 }
             }
 
-            override fun onEvent(event: Event, relay: Relay) {
+            override fun onEvent(event: Event, subscriptionId: String, relay: Relay) {
                 eventsReceived.add("${event.pubKey.toHex().substring(0, 6)}_${event.kind}")
             }
         }
@@ -34,8 +34,8 @@ class LoadFollowsOfFollowsFromSingleRelay {
         private fun onContactList(event: ContactListEvent) {
             if (event.pubKey.toHex() == pubKey) {
                 follows[0].addAll(event.follows.map { it.pubKeyHex })
-                Client.addFilter(JsonFilter(kinds = listOf(ContactListEvent.kind),
-                    authors = follows[0].toList())
+                Client.requestAndWatch(filters = mutableListOf(JsonFilter(kinds = listOf(ContactListEvent.kind),
+                    authors = follows[0].toList()))
                 )
                 println("Phase two: Requesting user's follows' follows")
             } else if (event.pubKey.toHex() in follows[0]) {
@@ -45,8 +45,9 @@ class LoadFollowsOfFollowsFromSingleRelay {
                     val x = followsReceived
                     delay(2_000)
                     if (x == followsReceived) {
-                        Client.addFilter(JsonFilter(kinds = listOf(ContactListEvent.kind),
+                        Client.requestAndWatch(filters = mutableListOf(JsonFilter(kinds = listOf(ContactListEvent.kind),
                             authors = follows[1].toList()))
+                        )
                         println("Phase three: Requesting user's follows' follows' follows")
                     }
                 }
@@ -57,8 +58,9 @@ class LoadFollowsOfFollowsFromSingleRelay {
                     val x = followsOfFollowsReceived
                     delay(2_000)
                     if (x == followsOfFollowsReceived) {
-                        Client.addFilter(JsonFilter(kinds = listOf(MetadataEvent.kind),
+                        Client.requestAndWatch(filters = mutableListOf(JsonFilter(kinds = listOf(MetadataEvent.kind),
                             authors = (follows[2] + follows[1] + follows[0] + pubKey).toList()))
+                        )
                         println("Phase four: Requesting everybody's names")
                     }
                 }
@@ -102,7 +104,10 @@ class LoadFollowsOfFollowsFromSingleRelay {
         fun main(vararg args: String) {
             Client.subscribe(listener)
             println("Phase one: Requesting user's follows")
-            Client.connect(mutableListOf(JsonFilter(kinds = listOf(ContactListEvent.kind), authors = listOf(pubKey))), relays)
+            Client.connect(relays = relays)
+            Client.requestAndWatch(filters = mutableListOf(
+                JsonFilter(kinds = listOf(ContactListEvent.kind), authors = listOf(pubKey))
+            ))
             while (running) {
                 Thread.sleep(100)
             }

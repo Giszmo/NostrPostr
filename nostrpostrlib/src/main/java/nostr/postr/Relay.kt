@@ -20,11 +20,12 @@ class Relay(
 
     fun unregister(listener: Listener) = listeners.remove(listener)
 
-    fun connect(reconnectTs: Long? = null) {
+    fun requestAndWatch(subscriptionId: String, reconnectTs: Long? = null) {
         val request = Request.Builder().url(url).build()
         val listener = object : WebSocketListener() {
+
             override fun onOpen(webSocket: WebSocket, response: Response) {
-                webSocket.send("""["REQ","main-channel",${Client.filters.joinToString() {it.toJson()} }]""")
+                sendFilter(requestId = subscriptionId, reconnectTs = reconnectTs)
                 listeners.forEach { it.onRelayStateChange(this@Relay, Type.CONNECT) }
             }
 
@@ -36,45 +37,43 @@ class Relay(
                     when (type) {
                         "EVENT" -> {
                             val event = Event.fromJson(msg[2], Client.lenient)
-                            listeners.forEach { it.onEvent(this@Relay, event) }
+                            listeners.forEach { it.onEvent(this@Relay, subscriptionId, event) }
                         }
                         "EOSE" -> listeners.forEach {
                             it.onRelayStateChange(this@Relay, Type.EOSE)
                         }
                         "NOTICE" -> listeners.forEach {
                             // "channel" being the second string in the string array ...
-                            it.onError(this@Relay, Error("Relay sent notice: $channel"))
+                            it.onError(this@Relay, subscriptionId, Error("Relay sent notice: $channel"))
                         }
                         else -> listeners.forEach {
                             it.onError(
                                 this@Relay,
+                                subscriptionId,
                                 Error("Unknown type $type on channel $channel. Msg was $text")
                             )
                         }
                     }
                 } catch (t: Throwable) {
                     text.chunked(2000) { chunked ->
-                        listeners.forEach { it.onError(this@Relay, Error("Problem with $chunked")) }
+                        listeners.forEach { it.onError(this@Relay, subscriptionId, Error("Problem with $chunked")) }
                     }
                 }
             }
 
             override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
                 listeners.forEach { it.onRelayStateChange(this@Relay, Type.DISCONNECT) }
-                // As a rough guess, we assume we might have missed events during those last 30s ...
-                // TODO: Make sure that queries that have not gotten their EOSE yet, get resent unmodified.
-                val lastGood = System.currentTimeMillis() - 30_000
-                connect(lastGood)
+
             }
 
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
                 listeners.forEach {
-                    it.onError(this@Relay, Error("WebSocket Failure", t))
+                    it.onError(this@Relay, subscriptionId, Error("WebSocket Failure", t))
                 }
             }
         }
         socket = httpClient.newWebSocket(request, listener)
-        sendFilter(reconnectTs)
+
     }
 
     fun disconnect() {
@@ -82,18 +81,31 @@ class Relay(
         socket.close(1000, "Normal close")
     }
 
-    fun sendFilter(reconnectTs: Long? = null) {
+    fun sendFilter(requestId: String, reconnectTs: Long? = null) {
         val filters = if (reconnectTs != null) {
-            Client.filters.map { JsonFilter(it.ids, it.authors, it.kinds, it.tags, since = reconnectTs) }
+            Client.subscriptions[requestId]?.let {
+                it.map { filter ->
+                    JsonFilter(filter.ids, filter.authors, filter.kinds, filter.tags, since = reconnectTs)
+                }
+            } ?: error("No filter(s) found.")
+            //Client.filters.map { JsonFilter(it.ids, it.authors, it.kinds, it.tags, since = reconnectTs) }
         } else {
-            Client.filters
+            Client.subscriptions[requestId]?.let {
+                it.map { filter ->
+                    JsonFilter(filter.ids, filter.authors, filter.kinds, filter.tags)
+                }
+            } ?: error("No filter(s) found.")
         }
-        val request = """["REQ","main",${filters.joinToString(",") { it.toJson() }}]"""
+        val request = """["REQ","$requestId",${filters.joinToString(",") { it.toJson() }}]"""
         socket.send(request)
     }
 
     fun send(signedEvent: Event) {
         socket.send("""["EVENT",${signedEvent.toJson()}]""")
+    }
+
+    fun close(subscriptionId: String){
+        socket.send("""["CLOSE","$subscriptionId"]""")
     }
 
     enum class Type {
@@ -109,9 +121,9 @@ class Relay(
         /**
          * A new message was received
          */
-        fun onEvent(relay: Relay, event: Event)
+        fun onEvent(relay: Relay, subscriptionId: String, event: Event)
 
-        fun onError(relay: Relay, error: Error)
+        fun onError(relay: Relay, subscriptionId: String, error: Error)
 
         /**
          * Connected to or disconnected from a relay

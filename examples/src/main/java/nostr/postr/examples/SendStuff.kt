@@ -9,7 +9,7 @@ class SendStuff {
         private val persona = Persona(Hex.decode("ed677a60034a04bb282e1b4587e1ece5c5b81e2261d7aeea933c0ee07095df80"))
 
         private val listener = object: Client.Listener() {
-            override fun onNewEvent(event: Event) {
+            override fun onNewEvent(event: Event, subscriptionId: String) {
                 if (event.pubKey.toHex() == persona.pubKey.toHex()) {
                     logDetail(event, event.toJson())
                     stop()
@@ -23,11 +23,13 @@ class SendStuff {
         fun main(vararg args: String) {
             println("""Persona(privKey:${persona.privKey!!.toHex()}, pubKey:${persona.pubKey.toHex()})""")
             Client.subscribe(listener)
-            Client.connect(mutableListOf(JsonFilter(
-                authors = listOf(persona.pubKey.toHex()))), arrayOf(Relay("ws://127.0.0.1:7070/",
+            Client.connect(relays = arrayOf(Relay("ws://127.0.0.1:7070/",
                 read = true,
                 write = true
             )))
+            Client.requestAndWatch(filters = mutableListOf(JsonFilter(
+                authors = listOf(persona.pubKey.toHex())))
+            )
             val event = Event.create(persona.privKey!!, 35_000, listOf())
             Client.send(event)
 

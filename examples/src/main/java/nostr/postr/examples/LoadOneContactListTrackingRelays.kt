@@ -12,7 +12,7 @@ class LoadOneContactListTrackingRelays {
         val startTime = System.currentTimeMillis()
         private val pubKey = "46fcbe3065eaf1ae7811465924e48923363ff3f526bd6f73d7c184b16bd8ce4d"
         private val listener = object: Client.Listener() {
-            override fun onEvent(event: Event, relay: Relay) {
+            override fun onEvent(event: Event, subscriptionId: String, relay: Relay) {
                 if (event.pubKey.toHex() == pubKey) {
                     logDetail(
                         event,
@@ -28,7 +28,8 @@ class LoadOneContactListTrackingRelays {
         fun main(vararg args: String) {
             println("Requesting Contact List from ${Constants.defaultRelays.size} relays, measuring time for 10s ...")
             Client.subscribe(listener)
-            Client.connect(mutableListOf(JsonFilter(kinds = listOf(ContactListEvent.kind), authors = listOf(pubKey))))
+            Client.connect()
+            Client.requestAndWatch(filters = mutableListOf(JsonFilter(kinds = listOf(ContactListEvent.kind), authors = listOf(pubKey))))
             Thread.sleep(3_000)
             stop()
         }

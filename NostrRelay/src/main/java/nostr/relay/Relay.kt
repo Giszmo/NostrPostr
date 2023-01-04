@@ -138,7 +138,7 @@ fun main() {
     }.start("127.0.0.1", 7070)
     // get some recent and all future Events from other relays
     Client.subscribe(object : Client.Listener() {
-        override fun onNewEvent(event: Event) {
+        override fun onNewEvent(event: Event, subscriptionId: String) {
             processEvent(event, event.toJson())
         }
 
@@ -152,7 +152,8 @@ fun main() {
         // to cover even extended down-times automatically
         JsonFilter(since = Calendar.getInstance().apply { add(Calendar.HOUR, -6) }.time.time / 1000)
     }
-    Client.connect(mutableListOf(filter))
+    Client.connect()
+    Client.requestAndWatch(filters = mutableListOf(filter))
     while (true) {
         subscribers.forEach {it.key.sendPing()}
         val queries = subscribers

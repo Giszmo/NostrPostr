@@ -10,12 +10,26 @@ object RelayPool: Relay.Listener {
     private val listeners = HashSet<Listener>()
     private val eventIds = HashSet<String>()
 
-    init {
-        Constants.defaultRelays.forEach { addRelay(it) }
+
+    fun loadRelays(relayList: List<Relay>? = null){
+        if (!relayList.isNullOrEmpty()){
+            relayList.forEach { addRelay(it) }
+        } else {
+            Constants.defaultRelays.forEach { addRelay(it) }
+        }
     }
 
-    fun connect() {
-        relays.forEach { it.connect() }
+    fun requestAndWatch(subscriptionId: String) {
+        relays.forEach { it.requestAndWatch(subscriptionId = subscriptionId) }
+
+    }
+
+    fun send(signedEvent: Event) {
+        relays.forEach { it.send(signedEvent) }
+    }
+
+    fun close(subscriptionId: String){
+        relays.forEach { it.close(subscriptionId) }
     }
 
     fun disconnect() {
@@ -46,42 +60,35 @@ object RelayPool: Relay.Listener {
         /**
          * A new event was received
          */
-        fun onNewEvent(event: Event)
+        fun onNewEvent(event: Event, subscriptionId: String)
 
         /**
          * A new or repeat message was received
          */
 
-        fun onEvent(event: Event, relay: Relay)
+        fun onEvent(event: Event, subscriptionId: String, relay: Relay)
 
-        fun onError(error: Error, relay: Relay)
+        fun onError(error: Error, subscriptionId: String, relay: Relay)
 
         fun onRelayStateChange(type: Relay.Type, relay: Relay)
     }
 
     @Synchronized
-    override fun onEvent(relay: Relay, event: Event) {
-        listeners.forEach { it.onEvent(event, relay) }
+    override fun onEvent(relay: Relay, subscriptionId: String, event: Event) {
+        listeners.forEach { it.onEvent(event, subscriptionId, relay) }
         synchronized(this) {
             if (eventIds.add(event.id.toHex())) {
-                listeners.forEach { it.onNewEvent(event) }
+                listeners.forEach { it.onNewEvent(event, subscriptionId) }
             }
         }
     }
 
-    override fun onError(relay: Relay, error: Error) {
-        listeners.forEach { it.onError(error, relay) }
+    override fun onError(relay: Relay, subscriptionId: String, error: Error) {
+        listeners.forEach { it.onError(error, subscriptionId, relay) }
     }
 
     override fun onRelayStateChange(relay: Relay, type: Relay.Type) {
         listeners.forEach { it.onRelayStateChange(type, relay) }
     }
 
-    fun sendFilter() {
-        relays.forEach(Relay::sendFilter)
-    }
-
-    fun send(signedEvent: Event) {
-        relays.forEach { it.send(signedEvent) }
-    }
 }

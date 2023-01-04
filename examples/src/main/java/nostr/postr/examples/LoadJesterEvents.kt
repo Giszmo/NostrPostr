@@ -19,7 +19,7 @@ class LoadJesterEvents {
         private val gson: Gson = GsonBuilder().create()
         private var count = 0
         private val listener = object: Client.Listener() {
-            override fun onNewEvent(event: Event) {
+            override fun onNewEvent(event: Event, subscriptionId: String) {
                 count++
                 // Jester stores data as JSON in the Event's content. Here we just extract the chess
                 // move and print it
@@ -34,8 +34,9 @@ class LoadJesterEvents {
         @JvmStatic
         fun main(vararg args: String) {
             Client.subscribe(listener)
+            Client.connect()
             // We request to get only kind 30 events - the kind the Jester Chess client uses
-            Client.connect(mutableListOf(JsonFilter(kinds = listOf(30))))
+            Client.requestAndWatch(filters = mutableListOf(JsonFilter(kinds = listOf(30))))
             while (running) {
                 Thread.sleep(100)
             }

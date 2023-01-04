@@ -10,12 +10,11 @@ import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import nostr.postr.databinding.ActivityMainBinding
 import nostr.postr.events.*
-import java.util.*
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private val clientListener = object : Client.Listener() {
-        override fun onNewEvent(event: Event) {
+        override fun onNewEvent(event: Event, subscriptionId: String) {
             when (event.kind) {
                 MetadataEvent.kind, // 0
                 TextNoteEvent.kind, // 1
@@ -28,7 +27,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        override fun onError(error: Error, relay: Relay) {
+        override fun onError(error: Error, subscriptionId: String, relay: Relay) {
             Log.e("ERROR", "Relay ${relay.url}: ${error.message}")
         }
 
@@ -49,7 +48,8 @@ class MainActivity : AppCompatActivity() {
         val filter = JsonFilter(
             since = 1652305L
         )
-        Client.connect(mutableListOf(filter))
+        Client.connect()
+        Client.requestAndWatch(filters = mutableListOf(filter))
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
