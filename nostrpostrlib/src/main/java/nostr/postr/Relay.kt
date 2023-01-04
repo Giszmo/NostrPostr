@@ -20,7 +20,7 @@ class Relay(
 
     fun unregister(listener: Listener) = listeners.remove(listener)
 
-    fun connect(subscriptionId: String, reconnectTs: Long? = null) {
+    fun requestAndWatch(subscriptionId: String, reconnectTs: Long? = null) {
         val request = Request.Builder().url(url).build()
         val listener = object : WebSocketListener() {
 

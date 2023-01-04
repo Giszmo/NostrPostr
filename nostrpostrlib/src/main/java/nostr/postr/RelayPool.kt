@@ -19,8 +19,8 @@ object RelayPool: Relay.Listener {
         }
     }
 
-    fun sendFilter(subscriptionId: String) {
-        relays.forEach { it.connect(subscriptionId = subscriptionId) }
+    fun requestAndWatch(subscriptionId: String) {
+        relays.forEach { it.requestAndWatch(subscriptionId = subscriptionId) }
 
     }
 

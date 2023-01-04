@@ -37,7 +37,7 @@ object Client: RelayPool.Listener {
         filters: MutableList<JsonFilter> = mutableListOf(JsonFilter())
     ) {
         subscriptions[subscriptionId] = filters
-        RelayPool.sendFilter(subscriptionId)
+        RelayPool.requestAndWatch(subscriptionId)
     }
 
     fun send(signedEvent: Event) {
