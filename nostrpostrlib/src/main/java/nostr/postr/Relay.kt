@@ -107,7 +107,7 @@ class Relay(
         socket.send("""["EVENT",${signedEvent.toJson()}]""")
     }
 
-    fun closeSubscription(subscriptionId: String){
+    fun close(subscriptionId: String){
         socket.send("""["CLOSE","$subscriptionId"]""")
     }
 
