@@ -48,6 +48,14 @@ object Client: RelayPool.Listener {
 
     }
 
+    fun send(signedEvent: Event) {
+        RelayPool.send(signedEvent)
+    }
+
+    fun close(subscriptionId: String){
+        RelayPool.sendCloseSubscription(subscriptionId)
+    }
+
     fun disconnect() {
         RelayPool.unregister(this)
         RelayPool.disconnect()
@@ -93,9 +101,6 @@ object Client: RelayPool.Listener {
         return listeners.remove(listener)
     }
 
-    fun send(signedEvent: Event) {
-        RelayPool.send(signedEvent)
-    }
 
     abstract class Listener {
         /**

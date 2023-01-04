@@ -24,6 +24,14 @@ object RelayPool: Relay.Listener {
 
     }
 
+    fun send(signedEvent: Event) {
+        relays.forEach { it.sendEvent(signedEvent) }
+    }
+
+    fun sendCloseSubscription(subscriptionId: String){
+        relays.forEach { it.closeSubscription(subscriptionId) }
+    }
+
     fun disconnect() {
         relays.forEach { it.disconnect() }
     }
@@ -83,7 +91,4 @@ object RelayPool: Relay.Listener {
         listeners.forEach { it.onRelayStateChange(type, relay) }
     }
 
-    fun send(signedEvent: Event) {
-        relays.forEach { it.send(signedEvent) }
-    }
 }

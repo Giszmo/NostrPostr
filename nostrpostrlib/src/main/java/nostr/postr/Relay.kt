@@ -102,8 +102,12 @@ class Relay(
         socket.send(request)
     }
 
-    fun send(signedEvent: Event) {
+    fun sendEvent(signedEvent: Event) {
         socket.send("""["EVENT",${signedEvent.toJson()}]""")
+    }
+
+    fun closeSubscription(subscriptionId: String){
+        socket.send("""["CLOSE","$subscriptionId"]""")
     }
 
     enum class Type {
