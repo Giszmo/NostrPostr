@@ -21,7 +21,6 @@ object Client: RelayPool.Listener {
     var lenient: Boolean = false
     val personae: Array<Persona> = emptyArray()
     private val listeners = HashSet<Listener>()
-    //internal var filters = mutableListOf(JsonFilter())
     internal var relays = Constants.defaultRelays
     internal val subscriptions: MutableMap<String, MutableList<JsonFilter>> = mutableMapOf()
 
@@ -37,15 +36,8 @@ object Client: RelayPool.Listener {
         subscriptionId: String = UUID.randomUUID().toString().substring(0..10),
         filters: MutableList<JsonFilter> = mutableListOf(JsonFilter())
     ) {
-       // this.filters = filters
-
-        val obtainedFilters = subscriptions[subscriptionId]
-        if (obtainedFilters.isNullOrEmpty()){
-            subscriptions[subscriptionId] = filters
-        }
-
+        subscriptions[subscriptionId] = filters
         RelayPool.sendFilter(subscriptionId)
-
     }
 
     fun send(signedEvent: Event) {
