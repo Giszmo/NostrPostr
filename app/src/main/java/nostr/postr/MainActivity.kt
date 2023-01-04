@@ -49,7 +49,7 @@ class MainActivity : AppCompatActivity() {
             since = 1652305L
         )
         Client.connect()
-        Client.request(filters = mutableListOf(filter))
+        Client.requestAndWatch(filters = mutableListOf(filter))
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)

@@ -33,7 +33,7 @@ class LoadShortSimpleTextNotes {
         fun main(vararg args: String) {
             Client.subscribe(listener)
             Client.connect()
-            Client.request(filters = mutableListOf(JsonFilter(kinds = listOf(TextNoteEvent.kind))))
+            Client.requestAndWatch(filters = mutableListOf(JsonFilter(kinds = listOf(TextNoteEvent.kind))))
             while (running) {
                 Thread.sleep(100)
             }

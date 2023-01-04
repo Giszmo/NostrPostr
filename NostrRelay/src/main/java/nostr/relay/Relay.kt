@@ -153,7 +153,7 @@ fun main() {
         JsonFilter(since = Calendar.getInstance().apply { add(Calendar.HOUR, -6) }.time.time / 1000)
     }
     Client.connect()
-    Client.request(filters = mutableListOf(filter))
+    Client.requestAndWatch(filters = mutableListOf(filter))
     while (true) {
         subscribers.forEach {it.key.sendPing()}
         val queries = subscribers

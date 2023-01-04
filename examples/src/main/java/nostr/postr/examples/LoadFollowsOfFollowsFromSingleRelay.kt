@@ -34,7 +34,7 @@ class LoadFollowsOfFollowsFromSingleRelay {
         private fun onContactList(event: ContactListEvent) {
             if (event.pubKey.toHex() == pubKey) {
                 follows[0].addAll(event.follows.map { it.pubKeyHex })
-                Client.request(filters = mutableListOf(JsonFilter(kinds = listOf(ContactListEvent.kind),
+                Client.requestAndWatch(filters = mutableListOf(JsonFilter(kinds = listOf(ContactListEvent.kind),
                     authors = follows[0].toList()))
                 )
                 println("Phase two: Requesting user's follows' follows")
@@ -45,7 +45,7 @@ class LoadFollowsOfFollowsFromSingleRelay {
                     val x = followsReceived
                     delay(2_000)
                     if (x == followsReceived) {
-                        Client.request(filters = mutableListOf(JsonFilter(kinds = listOf(ContactListEvent.kind),
+                        Client.requestAndWatch(filters = mutableListOf(JsonFilter(kinds = listOf(ContactListEvent.kind),
                             authors = follows[1].toList()))
                         )
                         println("Phase three: Requesting user's follows' follows' follows")
@@ -58,7 +58,7 @@ class LoadFollowsOfFollowsFromSingleRelay {
                     val x = followsOfFollowsReceived
                     delay(2_000)
                     if (x == followsOfFollowsReceived) {
-                        Client.request(filters = mutableListOf(JsonFilter(kinds = listOf(MetadataEvent.kind),
+                        Client.requestAndWatch(filters = mutableListOf(JsonFilter(kinds = listOf(MetadataEvent.kind),
                             authors = (follows[2] + follows[1] + follows[0] + pubKey).toList()))
                         )
                         println("Phase four: Requesting everybody's names")
@@ -105,7 +105,7 @@ class LoadFollowsOfFollowsFromSingleRelay {
             Client.subscribe(listener)
             println("Phase one: Requesting user's follows")
             Client.connect(relays = relays)
-            Client.request(filters = mutableListOf(
+            Client.requestAndWatch(filters = mutableListOf(
                 JsonFilter(kinds = listOf(ContactListEvent.kind), authors = listOf(pubKey))
             ))
             while (running) {

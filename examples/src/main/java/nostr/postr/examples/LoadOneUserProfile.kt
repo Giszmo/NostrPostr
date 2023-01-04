@@ -32,7 +32,7 @@ class LoadOneUserProfile {
         fun main(vararg args: String) {
             Client.subscribe(listener)
             Client.connect()
-            Client.request(subscriptionId = "profile",
+            Client.requestAndWatch(subscriptionId = "profile",
                 filters = mutableListOf(JsonFilter(kinds = listOf(MetadataEvent.kind), authors = listOf(pubKey)))
             )
             while (running) {

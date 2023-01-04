@@ -29,7 +29,7 @@ class LoadOneContactListTrackingRelays {
             println("Requesting Contact List from ${Constants.defaultRelays.size} relays, measuring time for 10s ...")
             Client.subscribe(listener)
             Client.connect()
-            Client.request(filters = mutableListOf(JsonFilter(kinds = listOf(ContactListEvent.kind), authors = listOf(pubKey))))
+            Client.requestAndWatch(filters = mutableListOf(JsonFilter(kinds = listOf(ContactListEvent.kind), authors = listOf(pubKey))))
             Thread.sleep(3_000)
             stop()
         }

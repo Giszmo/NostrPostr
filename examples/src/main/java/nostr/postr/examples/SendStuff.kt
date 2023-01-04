@@ -27,7 +27,7 @@ class SendStuff {
                 read = true,
                 write = true
             )))
-            Client.request(filters = mutableListOf(JsonFilter(
+            Client.requestAndWatch(filters = mutableListOf(JsonFilter(
                 authors = listOf(persona.pubKey.toHex())))
             )
             val event = Event.create(persona.privKey!!, 35_000, listOf())

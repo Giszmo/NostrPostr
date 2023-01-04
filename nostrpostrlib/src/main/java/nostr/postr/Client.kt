@@ -32,7 +32,7 @@ object Client: RelayPool.Listener {
         this.relays = relays
     }
 
-    fun request(
+    fun requestAndWatch(
         subscriptionId: String = UUID.randomUUID().toString().substring(0..10),
         filters: MutableList<JsonFilter> = mutableListOf(JsonFilter())
     ) {
