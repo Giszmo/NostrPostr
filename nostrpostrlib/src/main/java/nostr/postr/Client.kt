@@ -61,22 +61,6 @@ object Client: RelayPool.Listener {
         RelayPool.disconnect()
     }
 
-    @Deprecated(message = "This function should not be used. Instead, use subsequent request() calls.")
-    fun addFilter(requestId: String = "main", filter: JsonFilter) {
-       // filters.add(filter)
-        val equivalentFilters = subscriptions[requestId]
-        if (equivalentFilters.isNullOrEmpty()){
-            subscriptions[requestId] = mutableListOf(filter)
-        }
-        else {
-            if (!equivalentFilters.contains(filter)){
-                equivalentFilters.add(filter)
-            }
-        }
-
-        RelayPool.sendFilter(requestId)
-    }
-
     override fun onEvent(event: Event, subscriptionId: String, relay: Relay) {
         listeners.forEach { it.onEvent(event, subscriptionId, relay) }
     }
