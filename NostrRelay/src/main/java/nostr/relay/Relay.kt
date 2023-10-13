@@ -70,7 +70,7 @@ fun main() {
         else -> {
             Database.connect(
                 url = config["lite_url"]!!,
-                driver = config["lite_url"]!!,
+                driver = config["lite_driver"]!!,
             )
             TransactionManager.manager.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE
             // or Connection.TRANSACTION_READ_UNCOMMITTED
